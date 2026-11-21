@@ -497,7 +497,7 @@ if (emulatorHost) {
     await assertFails(
       updateDoc(doc(aliceDb, 'museums', 'museum_alice_pub'), {
         title: 'Mezcla Inválida',
-        islandCount: 1,
+        islandCount: 2,
         updatedAt: serverTimestamp(),
       })
     );
