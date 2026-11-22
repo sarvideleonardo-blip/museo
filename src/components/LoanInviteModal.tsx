@@ -1,12 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
-import { CheckCircle2, Cloud, Compass, KeyRound, Link2, LogIn, Sparkles, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Cloud,
+  Compass,
+  KeyRound,
+  Link2,
+  LogIn,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import {
   acceptIslandInvite,
   fetchIslandInvite,
   fetchMyGuestLoans,
 } from '../firebase/interactions';
 import { CloudMuseum, IslandInvite } from '../types/museum';
+import {
+  evaluateInviteExpiration,
+  formatElapsedTime,
+  formatReadableDate,
+} from '../utils/inviteHelpers';
 
 interface LoanInviteModalProps {
   isOpen: boolean;
@@ -278,9 +295,15 @@ export const LoanInviteModal: React.FC<LoanInviteModalProps> = ({
               </div>
 
               {invite.status === 'revoked' && (
-                <p className="text-sm leading-relaxed text-[#ffd5c7]">
-                  El creador anfitrión revocó este préstamo o la invitación ya caducó.
-                </p>
+                <div className="space-y-2 border border-[#bd7967]/60 bg-[#422222]/80 p-4 text-[#ffd5c7]">
+                  <div className="flex items-center gap-2 font-bold text-sm text-[#ffc1b0]">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-[#ff8c73]" />
+                    <span>Préstamo no disponible o revocado</span>
+                  </div>
+                  <p className="text-xs leading-relaxed">
+                    El creador anfitrión ha revocado el acceso para esta invitación o el préstamo ha concluido. Si crees que se trata de un error, por favor solicita un nuevo enlace mágico de invitación al anfitrión del museo.
+                  </p>
+                </div>
               )}
 
               {invite.status === 'accepted' && (
@@ -293,10 +316,21 @@ export const LoanInviteModal: React.FC<LoanInviteModalProps> = ({
                       </span>
                     </div>
                   )}
-                  <p className="text-sm text-[#d0e6da]">
-                    Esta isla está prestada a <strong className="text-[#fff9e8]">{invite.guestName}</strong>{' '}
-                    (museo de origen: <strong className="text-[#f4d47d]">{invite.sourceMuseumTitle}</strong>).
-                  </p>
+                  {isGuestOwnerOfAccepted ? (
+                    <p className="text-sm text-[#d0e6da]">
+                      Tienes esta isla prestada a tu nombre (<strong className="text-[#fff9e8]">{invite.guestName}</strong>) enlazando a tu museo origen (<strong className="text-[#f4d47d]">{invite.sourceMuseumTitle}</strong>).
+                    </p>
+                  ) : (
+                    <div className="space-y-2 border border-[#f4d47d]/40 bg-[#3d2f16]/70 p-3.5 text-xs text-[#ffecc7]">
+                      <div className="flex items-center gap-2 font-bold text-sm text-[#f4d47d]">
+                        <AlertTriangle className="h-4 w-4 shrink-0 text-[#f4d47d]" />
+                        <span>Invitación ya reclamada</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        Esta invitación ya fue aceptada por otra cuenta (<strong className="text-white">{invite.guestName}</strong>). Cada invitación mágica es de un solo uso para garantizar la autoría exclusiva de la isla prestada.
+                      </p>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -314,6 +348,40 @@ export const LoanInviteModal: React.FC<LoanInviteModalProps> = ({
                       </span>
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Metadatos de fecha y tiempo transcurrido en el modal */}
+              {invite && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/10 pt-2 text-[11px] text-[#9fc4b8]">
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="h-3 w-3 text-[#d8c47b]" />
+                    <span>Creada: {formatReadableDate(invite.createdAt)} ({formatElapsedTime(invite.createdAt)})</span>
+                  </span>
+                  {invite.status === 'pending' && (() => {
+                    const evalExp = evaluateInviteExpiration(invite);
+                    if (evalExp.enforcedExpirationStr) {
+                      return (
+                        <span className={`inline-flex items-center gap-1 ${evalExp.isEnforcedExpired ? 'text-[#ffb4a2]' : 'text-[#c4ded2]'}`}>
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            {evalExp.isEnforcedExpired ? 'Expirada:' : 'Vence:'} {evalExp.enforcedExpirationStr}
+                          </span>
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="inline-flex items-center gap-1 text-[#c4ded2]">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          Fecha sugerida de revisión: {evalExp.suggestedReview.suggestedDateStr}
+                          {evalExp.suggestedReview.isPastSuggestedWindow
+                            ? ' (revisión sugerida cumplida)'
+                            : ` (${evalExp.suggestedReview.daysRemaining}d restantes)`}
+                        </span>
+                      </span>
+                    );
+                  })()}
                 </div>
               )}
 

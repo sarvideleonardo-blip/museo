@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import {
+  AlertTriangle,
   ArrowLeft,
+  Calendar,
   CheckCircle2,
+  Clock,
   Copy,
   Download,
   Heart,
@@ -21,6 +24,11 @@ import {
 import { CHARACTER_PROFILES } from '../data/characters';
 import { BIOME_LABELS, ORIGINAL_ISLANDS, getBasePiecesForIsland } from '../data/initialContent';
 import { CATEGORY_META, DEFAULT_MUSEUM_THEME, MUSEUM_THEME_PRESETS } from '../data/themes';
+import {
+  evaluateInviteExpiration,
+  formatElapsedTime,
+  formatReadableDate,
+} from '../utils/inviteHelpers';
 import {
   createIslandInvite,
   deleteIslandInvite,
@@ -2280,6 +2288,9 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                             const forThisIsland = islandInvites.filter(
                               (inv) => inv.islandId === activeIsland.id
                             );
+                            const hasActiveLoan = forThisIsland.some((i) => i.status === 'accepted');
+                            const pendingCount = forThisIsland.filter((i) => i.status === 'pending').length;
+
                             if (forThisIsland.length === 0) {
                               return (
                                 <p className="text-xs text-[#9fc4b8]">
@@ -2288,110 +2299,187 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                               );
                             }
                             return (
-                              <div className="space-y-2">
-                                {forThisIsland.map((inv) => {
-                                  const magicUrl = `${window.location.origin}${window.location.pathname}?museum=${encodeURIComponent(source.museum.id)}&invite=${encodeURIComponent(inv.id)}`;
-                                  return (
-                                    <div
-                                      key={inv.id}
-                                      className="flex flex-wrap items-center justify-between gap-2 border border-white/15 bg-white/[0.04] px-3 py-2.5 text-xs"
-                                    >
-                                      <div className="min-w-0 flex-1 space-y-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <span
-                                            className={`border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                              inv.status === 'pending'
-                                                ? 'border-[#f4d47d] bg-[#6d451f] text-[#fff3c7]'
-                                                : inv.status === 'accepted'
-                                                  ? 'border-[#7fd6cc] bg-[#144c58] text-[#e7fbf7]'
-                                                  : 'border-[#bd7967] bg-[#533b3a] text-[#ffd5c7]'
-                                            }`}
-                                          >
-                                            {inv.status === 'pending'
-                                              ? 'Pendiente'
-                                              : inv.status === 'accepted'
-                                                ? 'Prestada'
-                                                : 'Revocada'}
+                              <div className="space-y-3">
+                                {hasActiveLoan && (
+                                  <div className="flex items-center gap-2 border border-[#f4d47d]/60 bg-[#422d14]/80 px-3 py-2 text-xs text-[#ffebb3]">
+                                    <AlertTriangle className="h-4 w-4 shrink-0 text-[#f4d47d]" />
+                                    <span>
+                                      <strong>Cupo completo:</strong> Esta isla ya tiene un préstamo activo. Nuevas invitaciones no podrán ser aceptadas simultáneamente hasta revocar el préstamo actual.
+                                    </span>
+                                  </div>
+                                )}
+                                {!hasActiveLoan && pendingCount > 1 && (
+                                  <div className="flex items-center gap-2 border border-[#7fd6cc]/40 bg-[#0b333c]/70 px-3 py-2 text-xs text-[#d2f3eb]">
+                                    <Clock className="h-4 w-4 shrink-0 text-[#7fd6cc]" />
+                                    <span>
+                                      Hay {pendingCount} invitaciones pendientes. La primera persona que la acepte ocupará la isla (límite de 1 creador invitado por isla).
+                                    </span>
+                                  </div>
+                                )}
+
+                                <div className="space-y-2">
+                                  {forThisIsland.map((inv) => {
+                                    const magicUrl = `${window.location.origin}${window.location.pathname}?museum=${encodeURIComponent(source.museum.id)}&invite=${encodeURIComponent(inv.id)}`;
+                                    const evalExp = evaluateInviteExpiration(inv);
+                                    const readableCreatedAt = formatReadableDate(inv.createdAt);
+                                    const elapsed = formatElapsedTime(inv.createdAt);
+
+                                    return (
+                                      <div
+                                        key={inv.id}
+                                        className="space-y-2 border border-white/15 bg-white/[0.04] p-3 text-xs"
+                                      >
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                          <div className="min-w-0 flex-1 space-y-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                              <span
+                                                className={`border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                                  inv.status === 'pending'
+                                                    ? 'border-[#f4d47d] bg-[#6d451f] text-[#fff3c7]'
+                                                    : inv.status === 'accepted'
+                                                      ? 'border-[#7fd6cc] bg-[#144c58] text-[#e7fbf7]'
+                                                      : 'border-[#bd7967] bg-[#533b3a] text-[#ffd5c7]'
+                                                }`}
+                                              >
+                                                {inv.status === 'pending'
+                                                  ? 'Pendiente'
+                                                  : inv.status === 'accepted'
+                                                    ? 'Prestada'
+                                                    : 'Revocada'}
+                                              </span>
+                                              <code className="bg-black/30 px-1.5 py-0.5 text-[#f4d47d]">
+                                                {inv.id}
+                                              </code>
+                                              {inv.status === 'accepted' && (
+                                                <span className="text-[#e1f4e9]">
+                                                  → <strong>{inv.guestName}</strong> ({inv.sourceMuseumTitle})
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          <div className="flex flex-wrap items-center gap-1.5">
+                                            {inv.status === 'pending' && (
+                                              <>
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    try {
+                                                      await navigator.clipboard?.writeText(magicUrl);
+                                                      setNotice('Enlace mágico copiado al portapapeles.');
+                                                    } catch {
+                                                      setNotice(`Enlace: ${magicUrl}`);
+                                                    }
+                                                  }}
+                                                  className="inline-flex items-center gap-1 border border-[#7fd6cc]/60 bg-[#0d3a46] px-2.5 py-1 text-xs text-[#e7fbf7] hover:bg-[#175b6e]"
+                                                >
+                                                  <Copy className="h-3 w-3" />
+                                                  <span>Copiar enlace</span>
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    try {
+                                                      await navigator.clipboard?.writeText(inv.id);
+                                                      setNotice(`Código corto ${inv.id} copiado al portapapeles.`);
+                                                    } catch {
+                                                      setNotice(`Código: ${inv.id}`);
+                                                    }
+                                                  }}
+                                                  className="inline-flex items-center gap-1 border border-[#f4d47d]/60 bg-[#422d14] px-2 py-1 text-xs text-[#ffebb3] hover:bg-[#5a3f1d]"
+                                                >
+                                                  <KeyRound className="h-3 w-3" />
+                                                  <span>Copiar código</span>
+                                                </button>
+                                              </>
+                                            )}
+                                            {inv.status !== 'revoked' && (
+                                              <button
+                                                type="button"
+                                                onClick={async () => {
+                                                  try {
+                                                    await revokeIslandInvite(inv.id);
+                                                    setIslandInvites((prev) =>
+                                                      prev.map((it) =>
+                                                        it.id === inv.id ? { ...it, status: 'revoked' } : it
+                                                      )
+                                                    );
+                                                    setNotice('Préstamo revocado.');
+                                                  } catch (err) {
+                                                    setNotice(
+                                                      err instanceof Error
+                                                        ? err.message
+                                                        : 'No se pudo revocar.'
+                                                    );
+                                                  }
+                                                }}
+                                                className="border border-[#d8c47b]/50 bg-[#062230] px-2.5 py-1 text-xs text-[#f4d47d] hover:bg-[#4b3527]"
+                                              >
+                                                Revocar
+                                              </button>
+                                            )}
+                                            <button
+                                              type="button"
+                                              onClick={async () => {
+                                                try {
+                                                  await deleteIslandInvite(inv.id);
+                                                  setIslandInvites((prev) =>
+                                                    prev.filter((it) => it.id !== inv.id)
+                                                  );
+                                                  setNotice('Invitación eliminada.');
+                                                } catch (err) {
+                                                  setNotice(
+                                                    err instanceof Error
+                                                      ? err.message
+                                                      : 'No se pudo eliminar.'
+                                                  );
+                                                }
+                                              }}
+                                              className="border border-[#bd7967] bg-[#533b3a] px-2 py-1 text-xs text-[#ffd5c7] hover:bg-[#6a4846]"
+                                            >
+                                              Eliminar
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#9fc4b8] border-t border-white/10 pt-2">
+                                          <span className="inline-flex items-center gap-1">
+                                            <Calendar className="h-3 w-3 text-[#d8c47b]" />
+                                            <span>Creada: {readableCreatedAt} {elapsed && `(${elapsed})`}</span>
                                           </span>
-                                          <code className="bg-black/30 px-1.5 py-0.5 text-[#f4d47d]">
-                                            {inv.id}
-                                          </code>
+                                          {inv.status === 'pending' && (
+                                            <>
+                                              {evalExp.enforcedExpirationStr ? (
+                                                <span className={`inline-flex items-center gap-1 ${evalExp.isEnforcedExpired ? 'text-[#ffb4a2]' : 'text-[#c4ded2]'}`}>
+                                                  <Clock className="h-3 w-3" />
+                                                  <span>
+                                                    {evalExp.isEnforcedExpired ? 'Expirada:' : 'Vence:'} {evalExp.enforcedExpirationStr}
+                                                  </span>
+                                                </span>
+                                              ) : (
+                                                <span className="inline-flex items-center gap-1 text-[#c4ded2]">
+                                                  <Clock className="h-3 w-3" />
+                                                  <span>
+                                                    Fecha sugerida de revisión: {evalExp.suggestedReview.suggestedDateStr}
+                                                    {evalExp.suggestedReview.isPastSuggestedWindow
+                                                      ? ' (revisión sugerida cumplida)'
+                                                      : ` (${evalExp.suggestedReview.daysRemaining}d restantes)`}
+                                                  </span>
+                                                </span>
+                                              )}
+                                            </>
+                                          )}
                                           {inv.status === 'accepted' && (
-                                            <span className="text-[#e1f4e9]">
-                                              → <strong>{inv.guestName}</strong> ({inv.sourceMuseumTitle})
+                                            <span className="inline-flex items-center gap-1 text-[#8ae6dc]">
+                                              <CheckCircle2 className="h-3 w-3" />
+                                              <span>Ocupada actualmente por {inv.guestName}</span>
                                             </span>
                                           )}
                                         </div>
                                       </div>
-
-                                      <div className="flex flex-wrap items-center gap-1.5">
-                                        {inv.status === 'pending' && (
-                                          <button
-                                            type="button"
-                                            onClick={async () => {
-                                              try {
-                                                await navigator.clipboard?.writeText(magicUrl);
-                                                setNotice('Enlace mágico copiado al portapapeles.');
-                                              } catch {
-                                                setNotice(`Enlace: ${magicUrl}`);
-                                              }
-                                            }}
-                                            className="inline-flex items-center gap-1 border border-[#7fd6cc]/60 bg-[#0d3a46] px-2.5 py-1 text-xs text-[#e7fbf7] hover:bg-[#175b6e]"
-                                          >
-                                            <Copy className="h-3 w-3" />
-                                            <span>Copiar enlace</span>
-                                          </button>
-                                        )}
-                                        {inv.status !== 'revoked' && (
-                                          <button
-                                            type="button"
-                                            onClick={async () => {
-                                              try {
-                                                await revokeIslandInvite(inv.id);
-                                                setIslandInvites((prev) =>
-                                                  prev.map((it) =>
-                                                    it.id === inv.id ? { ...it, status: 'revoked' } : it
-                                                  )
-                                                );
-                                                setNotice('Préstamo revocado.');
-                                              } catch (err) {
-                                                setNotice(
-                                                  err instanceof Error
-                                                    ? err.message
-                                                    : 'No se pudo revocar.'
-                                                );
-                                              }
-                                            }}
-                                            className="border border-[#d8c47b]/50 bg-[#062230] px-2.5 py-1 text-xs text-[#f4d47d] hover:bg-[#4b3527]"
-                                          >
-                                            Revocar
-                                          </button>
-                                        )}
-                                        <button
-                                          type="button"
-                                          onClick={async () => {
-                                            try {
-                                              await deleteIslandInvite(inv.id);
-                                              setIslandInvites((prev) =>
-                                                prev.filter((it) => it.id !== inv.id)
-                                              );
-                                              setNotice('Invitación eliminada.');
-                                            } catch (err) {
-                                              setNotice(
-                                                err instanceof Error
-                                                  ? err.message
-                                                  : 'No se pudo eliminar.'
-                                              );
-                                            }
-                                          }}
-                                          className="border border-[#bd7967] bg-[#533b3a] px-2 py-1 text-xs text-[#ffd5c7] hover:bg-[#6a4846]"
-                                        >
-                                          Eliminar
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })}
+                                </div>
                               </div>
                             );
                           })()
