@@ -454,9 +454,13 @@ service cloud.firestore {
         )
       );
 
-      allow list: if resource.data.isVisible == true || (
-        request.auth != null && resource.data.authorUid == request.auth.uid
-      );
+      allow list: if resource.data.isVisible == true ||
+        (request.auth != null && resource.data.authorUid == request.auth.uid) ||
+        (isVerifiedUser() && (
+          resource.data.museumId == 'museo404'
+            ? isFlagshipAdmin()
+            : get(/databases/$(database)/documents/museums/$(resource.data.museumId)).data.ownerId == request.auth.uid
+        ));
 
       allow create: if isValidId(entryId) &&
         isValidGuestbookEntry(incoming()) &&

@@ -54,4 +54,4 @@ jobs:
           npx --yes firebase-tools@15.34.1 emulators:exec
           --only firestore
           --project museo-404-rules-test
-          "node --experimental-strip-types --test firestore.rules.test.ts"
+          "node --experimental-strip-types --test firestore.rules.test.ts && node --experimental-strip-types --test firestore.rules.guestbook.test.ts"

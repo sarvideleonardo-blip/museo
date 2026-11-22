@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
-import { BookOpen, EyeOff, Send, Trash2, X } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, Send, Trash2, X } from 'lucide-react';
 import {
   createGuestbookEntry,
   deleteGuestbookEntry,
   fetchGuestbookEntries,
   hideGuestbookEntry,
 } from '../firebase/interactions';
+import { fetchHiddenGuestbookEntries, restoreGuestbookEntry } from '../firebase/guestbookModeration';
 import { retroAudio } from '../game/audio';
 import { GuestbookEntry } from '../types/museum';
 
@@ -25,6 +26,18 @@ interface GuestbookModalProps {
 }
 
 const NICK_KEY = 'museo404_guest_nickname_v1';
+const COOLDOWN_KEY = 'museo404_guestbook_last_submission_v1';
+const COOLDOWN_MS = 15_000;
+
+function getCooldownSeconds(museumId: string): number {
+  try {
+    const lastSubmittedAt = Number(sessionStorage.getItem(`${COOLDOWN_KEY}:${museumId}`));
+    if (!Number.isFinite(lastSubmittedAt) || lastSubmittedAt <= 0) return 0;
+    return Math.max(0, Math.ceil((lastSubmittedAt + COOLDOWN_MS - Date.now()) / 1000));
+  } catch {
+    return 0;
+  }
+}
 
 function formatShortDate(iso: string): string {
   try {
@@ -56,6 +69,7 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
   const [scopeFilter, setScopeFilter] = useState<'room' | 'all'>(
     roomId === 'reception' ? 'all' : 'room'
   );
+  const [showHiddenEntries, setShowHiddenEntries] = useState(false);
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -69,6 +83,10 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
   });
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(() => getCooldownSeconds(museumId));
+  const [cooldownUntil, setCooldownUntil] = useState(
+    () => Date.now() + getCooldownSeconds(museumId) * 1000
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -78,18 +96,26 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
     if (!nickname && authUser?.displayName) {
       setNickname(authUser.displayName.slice(0, 40));
     }
-  }, [isOpen, roomId, authUser?.displayName, nickname]);
+  }, [isOpen, roomId, authUser?.displayName]);
+
+  useEffect(() => {
+    if (isOpen) setShowHiddenEntries(false);
+  }, [isOpen, museumId]);
 
   const loadEntries = useCallback(async () => {
     if (!isOpen) return;
     setLoading(true);
     setLoadError(null);
     try {
-      const list = await fetchGuestbookEntries({
+      const params = {
         museumId,
         roomId: scopeFilter === 'room' ? roomId : null,
         maxItems: 50,
-      });
+      };
+      const list =
+        canModerate && showHiddenEntries
+          ? await fetchHiddenGuestbookEntries(params)
+          : await fetchGuestbookEntries(params);
       setEntries(list);
     } catch (err) {
       setLoadError(
@@ -98,11 +124,26 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [isOpen, museumId, roomId, scopeFilter]);
+  }, [isOpen, museumId, roomId, scopeFilter, canModerate, showHiddenEntries]);
 
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setCooldownUntil(Date.now() + getCooldownSeconds(museumId) * 1000);
+  }, [isOpen, museumId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const refreshCooldown = () => {
+      setCooldownSeconds(Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)));
+    };
+    refreshCooldown();
+    const intervalId = window.setInterval(refreshCooldown, 250);
+    return () => window.clearInterval(intervalId);
+  }, [isOpen, cooldownUntil]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -123,6 +164,15 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+    const remainingCooldown = Math.max(
+      getCooldownSeconds(museumId),
+      Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000))
+    );
+    if (remainingCooldown > 0) {
+      setCooldownSeconds(remainingCooldown);
+      setFormError(`Espera ${remainingCooldown} segundos antes de publicar otra firma.`);
+      return;
+    }
     const cleanNick = nickname.trim();
     const cleanMsg = message.trim();
     if (!cleanNick) {
@@ -149,8 +199,18 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
       } catch {
         // ignorar
       }
+      try {
+        sessionStorage.setItem(`${COOLDOWN_KEY}:${museumId}`, String(Date.now()));
+      } catch {
+        // El cooldown sigue activo en este montaje aunque sessionStorage no esté disponible.
+      }
+      const nextCooldownUntil = Date.now() + COOLDOWN_MS;
+      setCooldownUntil(nextCooldownUntil);
+      setCooldownSeconds(Math.ceil(COOLDOWN_MS / 1000));
       setMessage('');
-      setEntries((prev) => [created, ...prev]);
+      if (!showHiddenEntries) {
+        setEntries((prev) => [created, ...prev]);
+      }
       retroAudio.playDiscovery();
       onToast?.('Tu firma quedó registrada en el libro de visitas.');
     } catch (err) {
@@ -169,6 +229,16 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
       onToast?.('Comentario ocultado del libro público.');
     } catch (err) {
       onToast?.(err instanceof Error ? err.message : 'No se pudo ocultar el comentario.');
+    }
+  };
+
+  const handleRestore = async (entryId: string) => {
+    try {
+      await restoreGuestbookEntry(entryId);
+      setEntries((prev) => prev.filter((item) => item.id !== entryId));
+      onToast?.('Comentario restaurado en el libro público.');
+    } catch (err) {
+      onToast?.(err instanceof Error ? err.message : 'No se pudo restaurar el comentario.');
     }
   };
 
@@ -269,11 +339,17 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
                 </span>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || cooldownSeconds > 0}
                   className="font-pixel inline-flex items-center gap-2 border-2 border-[#183c49] bg-[#1d6873] px-4 py-2 text-[9px] text-[#fff9e5] transition-colors hover:bg-[#b25f37] disabled:opacity-60"
                 >
                   <Send className="h-3.5 w-3.5" />
-                  <span>{submitting ? 'FIRMANDO...' : 'FIRMAR LIBRO'}</span>
+                  <span>
+                    {submitting
+                      ? 'FIRMANDO...'
+                      : cooldownSeconds > 0
+                        ? `ESPERA ${cooldownSeconds}s`
+                        : 'FIRMAR LIBRO'}
+                  </span>
                 </button>
               </div>
             </form>
@@ -286,34 +362,64 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
           {/* Barra de filtro de sala vs todo el museo */}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[#163d4a]/15 pb-2.5">
             <h3 className="font-pixel text-[9px] tracking-wide text-[#163d4a]">
-              FIRMAS RECIENTES ({entries.length})
+              {showHiddenEntries ? 'MENSAJES OCULTOS' : 'FIRMAS RECIENTES'} ({entries.length})
             </h3>
-            {roomId !== 'reception' && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setScopeFilter('room')}
-                  className={`border px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    scopeFilter === 'room'
-                      ? 'border-[#163d4a] bg-[#1d6873] text-[#fff9e5]'
-                      : 'border-[#163d4a]/30 bg-white/60 text-[#355a60] hover:bg-white'
-                  }`}
-                >
-                  Esta sala
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScopeFilter('all')}
-                  className={`border px-2.5 py-1 text-xs font-semibold transition-colors ${
-                    scopeFilter === 'all'
-                      ? 'border-[#163d4a] bg-[#1d6873] text-[#fff9e5]'
-                      : 'border-[#163d4a]/30 bg-white/60 text-[#355a60] hover:bg-white'
-                  }`}
-                >
-                  Todo el museo
-                </button>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {roomId !== 'reception' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setScopeFilter('room')}
+                    className={`border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      scopeFilter === 'room'
+                        ? 'border-[#163d4a] bg-[#1d6873] text-[#fff9e5]'
+                        : 'border-[#163d4a]/30 bg-white/60 text-[#355a60] hover:bg-white'
+                    }`}
+                  >
+                    Esta sala
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScopeFilter('all')}
+                    className={`border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      scopeFilter === 'all'
+                        ? 'border-[#163d4a] bg-[#1d6873] text-[#fff9e5]'
+                        : 'border-[#163d4a]/30 bg-white/60 text-[#355a60] hover:bg-white'
+                    }`}
+                  >
+                    Todo el museo
+                  </button>
+                </>
+              )}
+              {canModerate && (
+                <>
+                  <button
+                    type="button"
+                    aria-pressed={!showHiddenEntries}
+                    onClick={() => setShowHiddenEntries(false)}
+                    className={`border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      !showHiddenEntries
+                        ? 'border-[#163d4a] bg-[#1d6873] text-[#fff9e5]'
+                        : 'border-[#163d4a]/30 bg-white/60 text-[#355a60] hover:bg-white'
+                    }`}
+                  >
+                    Visibles
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={showHiddenEntries}
+                    onClick={() => setShowHiddenEntries(true)}
+                    className={`border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      showHiddenEntries
+                        ? 'border-[#163d4a] bg-[#1d6873] text-[#fff9e5]'
+                        : 'border-[#163d4a]/30 bg-white/60 text-[#355a60] hover:bg-white'
+                    }`}
+                  >
+                    Ocultos
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -326,7 +432,7 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
             </p>
           ) : entries.length === 0 ? (
             <div className="border border-dashed border-[#163d4a]/30 bg-white/40 px-5 py-8 text-center text-sm text-[#4a6b70]">
-              Aún no hay comentarios en esta sección. Sé la primera persona en dejar una dedicatoria.
+              {showHiddenEntries ? 'No hay comentarios ocultos en esta sección.' : 'Aún no hay comentarios en esta sección. Sé la primera persona en dejar una dedicatoria.'}
             </div>
           ) : (
             <ul className="space-y-2.5">
@@ -355,12 +461,18 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
                         {canModerate && (
                           <button
                             type="button"
-                            onClick={() => handleHide(entry.id)}
-                            title="Ocultar comentario"
+                            onClick={() =>
+                              showHiddenEntries ? handleRestore(entry.id) : handleHide(entry.id)
+                            }
+                            title={showHiddenEntries ? 'Restaurar comentario' : 'Ocultar comentario'}
                             className="inline-flex items-center gap-1 border border-[#163d4a]/30 bg-white px-2 py-0.5 text-[11px] text-[#355a60] hover:bg-[#fae5dc] hover:text-[#8a3118]"
                           >
-                            <EyeOff className="h-3 w-3" />
-                            <span>Ocultar</span>
+                            {showHiddenEntries ? (
+                              <Eye className="h-3 w-3" />
+                            ) : (
+                              <EyeOff className="h-3 w-3" />
+                            )}
+                            <span>{showHiddenEntries ? 'Restaurar' : 'Ocultar'}</span>
                           </button>
                         )}
                         {(canModerate || isAuthor) && (
