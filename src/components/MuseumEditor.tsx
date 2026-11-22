@@ -40,7 +40,7 @@ import {
   updateCloudMuseumMetadata,
   updateCloudMuseumStructure,
 } from '../firebase/museumNetwork';
-import { compactImage, compactImageToDataUrl, deleteMedia, getMedia, putMedia } from '../storage/mediaDb';
+import { compactImage, compactImageToDataUrl, deleteMedia, getMedia, getMediaObjectUrl, putMedia } from '../storage/mediaDb';
 import {
   createNewIsland,
   deleteCompleteIsland,
@@ -441,7 +441,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
     }
 
     if (existing?.mediaKey) {
-      getMedia(existing.mediaKey).then((blob) => {
+      getMedia(existing.mediaKey).then(async (blob) => {
         if (cancelled) return;
         if (!blob) {
           setPiecePreviewSrc(null);
@@ -449,20 +449,19 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
           setPiecePreviewLabel('');
           return;
         }
-        const objectUrl = URL.createObjectURL(blob);
-        revokeUrl = objectUrl;
+        const cachedUrl = await getMediaObjectUrl(existing.mediaKey!);
+        if (cancelled || !cachedUrl) return;
         const blobKind: 'image' | 'audio' | 'video' | null = blob.type.startsWith('audio/')
           ? 'audio'
           : blob.type.startsWith('video/')
             ? 'video'
             : 'image';
-        setPiecePreviewSrc(objectUrl);
+        setPiecePreviewSrc(cachedUrl);
         setPiecePreviewKind(blobKind);
         setPiecePreviewLabel('Archivo actual guardado en este navegador');
       });
       return () => {
         cancelled = true;
-        if (revokeUrl) URL.revokeObjectURL(revokeUrl);
       };
     }
 

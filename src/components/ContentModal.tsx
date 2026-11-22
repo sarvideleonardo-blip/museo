@@ -3,7 +3,7 @@ import { X, ExternalLink, Share2, Compass, ShoppingBag, CheckCircle2 } from 'luc
 import { createPurchaseInquiry } from '../firebase/interactions';
 import { retroAudio } from '../game/audio';
 import { renderProceduralPainting } from '../game/spriteRenderer';
-import { getMedia } from '../storage/mediaDb';
+import { getMedia, getMediaObjectUrl } from '../storage/mediaDb';
 import { FrameStyle, InteractiveAppData, MuseumPiece, PaintingData } from '../types/museum';
 
 export type ModalPayload =
@@ -156,19 +156,17 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     if (!mediaKey) return;
 
     let cancelled = false;
-    getMedia(mediaKey).then((blob) => {
+    getMediaObjectUrl(mediaKey).then((url) => {
       if (cancelled) return;
-      if (!blob) {
+      if (!url) {
         setMediaError('No se encontró el archivo guardado en este navegador.');
         return;
       }
-      activeUrl = URL.createObjectURL(blob);
-      setMediaUrl(activeUrl);
+      setMediaUrl(url);
     });
 
     return () => {
       cancelled = true;
-      if (activeUrl) URL.revokeObjectURL(activeUrl);
     };
   }, [payload]);
 

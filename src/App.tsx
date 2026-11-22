@@ -60,6 +60,7 @@ import {
   loadMuseumState,
   saveMuseumState,
 } from './storage/museumStore';
+import { clearMediaCache } from './storage/mediaDb';
 import {
   CharacterId,
   CloudMuseum,
@@ -322,6 +323,7 @@ export default function App() {
   );
 
   const openFlagshipMuseum = useCallback(() => {
+    clearMediaCache();
     setActiveMuseum({ kind: 'flagship' });
     setActiveMuseumLoans([]);
     setSelectedIslandId(null);
@@ -340,6 +342,7 @@ export default function App() {
   const openCloudMuseum = useCallback(
     async (museum: CloudMuseum) => {
       try {
+        clearMediaCache();
         const [pieces, loans] = await Promise.all([
           fetchMuseumPieces(museum.id, museum.ownerId, museum.isPublic),
           fetchAcceptedLoansForMuseum(museum.id).catch(() => [] as IslandInvite[]),

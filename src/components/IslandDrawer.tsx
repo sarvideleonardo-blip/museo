@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Compass, ArrowLeft, Share2, BookOpen } from 'lucide-react';
-import { getMedia } from '../storage/mediaDb';
+import { getMedia, getMediaObjectUrl } from '../storage/mediaDb';
 import { Island, MuseumPiece, MuseumThemeConfig, Room } from '../types/museum';
 
 interface IslandDrawerProps {
@@ -33,15 +33,12 @@ const PieceThumbnail: React.FC<{ mediaKey?: string | null; mediaDataUrl?: string
       return;
     }
     let active = true;
-    let objectUrl: string | null = null;
-    getMedia(mediaKey).then((blob) => {
-      if (!active || !blob) return;
-      objectUrl = URL.createObjectURL(blob);
-      setUrl(objectUrl);
+    getMediaObjectUrl(mediaKey).then((cachedUrl) => {
+      if (!active || !cachedUrl) return;
+      setUrl(cachedUrl);
     });
     return () => {
       active = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [mediaKey, mediaDataUrl]);
 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { Island, MuseumPiece, MuseumThemeConfig } from '../types/museum';
-import { ProceduralTextures } from './textures';
+import type { Island, MuseumPiece, MuseumThemeConfig } from '../types/museum';
+import type { ProceduralTextures } from './textures';
 
 export const DECK_Y = 1.6;
 
