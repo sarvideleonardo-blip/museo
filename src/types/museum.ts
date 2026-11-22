@@ -163,6 +163,8 @@ export interface Room {
   islandId: string;
   name: string;
   description: string;
+  /** IDs ordenados de las piezas dentro de esta sala */
+  pieceOrder?: string[];
 }
 
 export interface PaintingData {

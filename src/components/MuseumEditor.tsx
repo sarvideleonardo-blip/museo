@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { User } from 'firebase/auth';
 import {
   ArrowLeft,
+  ArrowDown,
+  ArrowUp,
   CheckCircle2,
   Copy,
   Download,
@@ -75,6 +77,7 @@ import {
   SaleStatus,
   ThemeId,
 } from '../types/museum';
+import { reorderRoomPiece, sortPiecesForRoom } from '../utils/pieceOrdering';
 
 export type EditorSource =
   | {
@@ -166,24 +169,28 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
       : getRoomsForIsland(source.state, islandId);
 
   const getPieces = (islandId: string, roomId: string): MuseumPiece[] => {
+    const room = getRooms(islandId).find((r) => r.id === roomId);
     if (isCloud) {
-      return source.pieces.filter((p) => p.islandId === islandId && p.roomId === roomId);
+      const raw = source.pieces.filter((p) => p.islandId === islandId && p.roomId === roomId);
+      return sortPiecesForRoom(raw, room);
     }
     const base = getPiecesForRoom(source.state, islandId, roomId);
     const commerceMap = source.flagshipConfig?.pieceCommerce;
-    if (!commerceMap) return base;
-    return base.map((p) => {
-      const ov = source.state.overrides[p.id];
-      const cloudComm = commerceMap[p.id];
-      if (!cloudComm) return p;
-      return {
-        ...p,
-        saleStatus: ov?.saleStatus ?? cloudComm.saleStatus,
-        priceLabel: ov?.priceLabel ?? cloudComm.priceLabel,
-        mediumOrSize: ov?.mediumOrSize ?? cloudComm.mediumOrSize,
-        paymentUrl: ov?.paymentUrl ?? cloudComm.paymentUrl,
-      };
-    });
+    const piecesWithCommerce = !commerceMap
+      ? base
+      : base.map((p) => {
+          const ov = source.state.overrides[p.id];
+          const cloudComm = commerceMap[p.id];
+          if (!cloudComm) return p;
+          return {
+            ...p,
+            saleStatus: ov?.saleStatus ?? cloudComm.saleStatus,
+            priceLabel: ov?.priceLabel ?? cloudComm.priceLabel,
+            mediumOrSize: ov?.mediumOrSize ?? cloudComm.mediumOrSize,
+            paymentUrl: ov?.paymentUrl ?? cloudComm.paymentUrl,
+          };
+        });
+    return sortPiecesForRoom(piecesWithCommerce, room);
   };
 
   const getIslandPiecesCount = (islandId: string): number =>
@@ -317,6 +324,99 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
 
   // Pila básica de deshacer para ediciones locales del Taller Interno
   const [localUndoStack, setLocalUndoStack] = useState<MuseumState[]>([]);
+
+  // Pila de deshacer para cambios en la nube (restaurar estructura / orden)
+  interface CloudUndoSnapshot {
+    islands: Island[];
+    rooms: Room[];
+    pieceCount: number;
+    description: string;
+  }
+  const [cloudUndoStack, setCloudUndoStack] = useState<CloudUndoSnapshot[]>([]);
+  const [undoingCloud, setUndoingCloud] = useState(false);
+
+  const pushCloudUndo = useCallback((description: string) => {
+    if (source.kind !== 'cloud') return;
+    setCloudUndoStack((prev) => [
+      {
+        islands: source.museum.islands,
+        rooms: source.museum.rooms,
+        pieceCount: source.museum.pieceCount,
+        description,
+      },
+      ...prev,
+    ].slice(0, 10));
+  }, [source]);
+
+  const handleUndoCloud = useCallback(async () => {
+    if (source.kind !== 'cloud' || cloudUndoStack.length === 0 || undoingCloud) return;
+    const [targetSnapshot, ...rest] = cloudUndoStack;
+    setUndoingCloud(true);
+    try {
+      const updatedMuseum = await updateCloudMuseumStructure(
+        source.museum,
+        targetSnapshot.islands,
+        targetSnapshot.rooms,
+        targetSnapshot.pieceCount
+      );
+      source.onSyncMuseum(updatedMuseum, source.pieces);
+      setCloudUndoStack(rest);
+      setNotice(`Se deshizo: ${targetSnapshot.description}`);
+    } catch (err) {
+      setNotice(
+        'Error al deshacer cambio en la nube: ' +
+          (err instanceof Error ? err.message : 'verifica los permisos.')
+      );
+    } finally {
+      setUndoingCloud(false);
+    }
+  }, [cloudUndoStack, source, undoingCloud]);
+
+  const handleMovePiece = async (
+    islandId: string,
+    roomId: string,
+    pieceId: string,
+    direction: 'up' | 'down'
+  ) => {
+    const currentPieces = getPieces(islandId, roomId);
+    const newOrder = reorderRoomPiece(currentPieces, pieceId, direction);
+    if (!newOrder) return; // Boundary reached or no-op
+
+    if (source.kind === 'local') {
+      const islandRooms = getRooms(islandId);
+      const updatedRooms = islandRooms.map((r) =>
+        r.id === roomId ? { ...r, pieceOrder: newOrder } : r
+      );
+      commitLocalState({
+        ...source.state,
+        rooms: { ...source.state.rooms, [islandId]: updatedRooms },
+      });
+      setNotice(direction === 'up' ? 'Pieza movida hacia arriba.' : 'Pieza movida hacia abajo.');
+      return;
+    }
+
+    if (isCloud) {
+      pushCloudUndo('Reordenamiento de piezas');
+      const nextRooms = source.museum.rooms.map((r) =>
+        r.islandId === islandId && r.id === roomId ? { ...r, pieceOrder: newOrder } : r
+      );
+      try {
+        const updated = await updateCloudMuseumStructure(
+          source.museum,
+          source.museum.islands,
+          nextRooms,
+          source.museum.pieceCount
+        );
+        source.onSyncMuseum(updated, source.pieces);
+        setNotice(direction === 'up' ? 'Pieza movida hacia arriba.' : 'Pieza movida hacia abajo.');
+      } catch (err) {
+        setNotice(
+          'No se pudo reordenar la pieza: ' +
+            (err instanceof Error ? err.message : 'verifica los permisos.')
+        );
+      }
+    }
+  };
 
   const commitLocalState = useCallback(
     (nextState: MuseumState) => {
@@ -702,6 +802,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
       setNotice(`Isla «${updatedMeta.title}» actualizada.`);
     } else {
       try {
+        pushCloudUndo(`Edición de isla «${activeIsland.title}»`);
         const nextIslands = source.museum.islands.map((isl) =>
           isl.id === activeIsland.id ? { ...isl, ...updatedMeta } : isl
         );
@@ -784,6 +885,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
     };
 
     try {
+      pushCloudUndo(`Creación de isla «${newIsland.title}»`);
       const nextIslands = [...source.museum.islands, newIsland];
       const nextRooms = [...source.museum.rooms, defaultRoom];
       const updatedMuseum = await updateCloudMuseumStructure(
@@ -934,6 +1036,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
     }
 
     try {
+      pushCloudUndo(`Creación de sala «${trimmed}»`);
       const nextRooms = [...source.museum.rooms, newRoom];
       const updatedMuseum = await updateCloudMuseumStructure(
         source.museum,
@@ -1035,6 +1138,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
     }
 
     try {
+      pushCloudUndo(`Edición de sala «${roomName.trim()}»`);
       const nextRooms = source.museum.rooms.map((r) =>
         r.id === view.roomId
           ? { ...r, name: roomName.trim() || r.name, description: roomDesc }
@@ -1316,6 +1420,20 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {source.kind === 'cloud' && !esInvitado && (
+              <button
+                type="button"
+                disabled={cloudUndoStack.length === 0 || undoingCloud}
+                onClick={handleUndoCloud}
+                title="Deshacer el último cambio de estructura u orden en la nube"
+                className="inline-flex min-h-[38px] items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58] disabled:opacity-45 tabular-nums"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {undoingCloud
+                  ? 'Deshaciendo...'
+                  : `Deshacer en nube${cloudUndoStack.length > 0 ? ` (${cloudUndoStack.length})` : ''}`}
+              </button>
+            )}
             {source.kind === 'local' && (
               <>
                 <button
@@ -2550,83 +2668,113 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  {getPieces(view.islandId, view.roomId).map((item) => {
-                    const canModifyPiece =
-                      !esInvitado || Boolean(guestAccess && item.loanInviteId === guestAccess.inviteId);
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex flex-wrap items-center justify-between gap-3 border border-[#e0d7a5]/20 bg-white/[0.045] px-4 py-2.5"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <strong className="truncate text-base font-semibold text-[#fff9e8]">
-                              {item.title}
-                            </strong>
-                            {item.loanInviteId && (
-                              <span className="inline-flex items-center gap-1 border border-[#7fd6cc]/60 bg-[#0d3a46] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#b7f2eb]">
-                                <Link2 className="h-2.5 w-2.5" />
-                                Invitado
-                              </span>
-                            )}
-                            {item.saleStatus && item.saleStatus !== 'not_for_sale' && (
-                              <span
-                                className={`border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider tabular-nums ${
-                                  item.saleStatus === 'for_sale'
-                                    ? 'border-[#72c6c1] bg-[#174653] text-[#e7fbf7]'
+                  {(() => {
+                    const roomPieces = getPieces(view.islandId, view.roomId);
+                    return roomPieces.map((item, idx) => {
+                      const canModifyPiece =
+                        !esInvitado || Boolean(guestAccess && item.loanInviteId === guestAccess.inviteId);
+                      const isFirst = idx === 0;
+                      const isLast = idx === roomPieces.length - 1;
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-wrap items-center justify-between gap-3 border border-[#e0d7a5]/20 bg-white/[0.045] px-4 py-2.5"
+                        >
+                          {/* Controles de reordenamiento */}
+                          <div className="flex flex-col gap-1 shrink-0">
+                            <button
+                              type="button"
+                              disabled={isFirst || !canModifyPiece}
+                              onClick={() => handleMovePiece(view.islandId, view.roomId, item.id, 'up')}
+                              aria-label={`Subir orden de «${item.title}»`}
+                              title="Subir orden"
+                              className="inline-flex h-6 w-6 items-center justify-center border border-[#7fd6cc]/40 bg-[#072b38] text-[#e7fbf7] hover:bg-[#134e5e] disabled:opacity-30 disabled:pointer-events-none"
+                            >
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isLast || !canModifyPiece}
+                              onClick={() => handleMovePiece(view.islandId, view.roomId, item.id, 'down')}
+                              aria-label={`Bajar orden de «${item.title}»`}
+                              title="Bajar orden"
+                              className="inline-flex h-6 w-6 items-center justify-center border border-[#7fd6cc]/40 bg-[#072b38] text-[#e7fbf7] hover:bg-[#134e5e] disabled:opacity-30 disabled:pointer-events-none"
+                            >
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <strong className="truncate text-base font-semibold text-[#fff9e8]">
+                                {item.title}
+                              </strong>
+                              {item.loanInviteId && (
+                                <span className="inline-flex items-center gap-1 border border-[#7fd6cc]/60 bg-[#0d3a46] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#b7f2eb]">
+                                  <Link2 className="h-2.5 w-2.5" />
+                                  Invitado
+                                </span>
+                              )}
+                              {item.saleStatus && item.saleStatus !== 'not_for_sale' && (
+                                <span
+                                  className={`border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider tabular-nums ${
+                                    item.saleStatus === 'for_sale'
+                                      ? 'border-[#72c6c1] bg-[#174653] text-[#e7fbf7]'
+                                      : item.saleStatus === 'reserved'
+                                        ? 'border-[#f4d47d] bg-[#6d451f] text-[#fff3c7]'
+                                        : 'border-white/30 bg-white/10 text-[#d0e6da]'
+                                  }`}
+                                >
+                                  {item.saleStatus === 'for_sale'
+                                    ? item.priceLabel
+                                     ? `EN VENTA · ${item.priceLabel}`
+                                      : 'EN VENTA'
                                     : item.saleStatus === 'reserved'
-                                      ? 'border-[#f4d47d] bg-[#6d451f] text-[#fff3c7]'
-                                      : 'border-white/30 bg-white/10 text-[#d0e6da]'
-                                }`}
-                              >
-                                {item.saleStatus === 'for_sale'
-                                  ? item.priceLabel
-                                    ? `EN VENTA · ${item.priceLabel}`
-                                    : 'EN VENTA'
-                                  : item.saleStatus === 'reserved'
-                                    ? 'RESERVADA'
-                                    : 'VENDIDA'}
+                                      ? 'RESERVADA'
+                                      : 'VENDIDA'}
+                                </span>
+                              )}
+                            </div>
+                            <small className="block truncate text-xs text-[#a8c8bc]">
+                              {item.subtitle || item.kind}
+                              {item.curatedFrom
+                                ? ` · de «${item.curatedFrom.sourceMuseumTitle}»`
+                                : isCloud
+                                  ? ' · en la nube'
+                                  : item.custom
+                                    ? ' · añadida por ti'
+                                    : ' · colección original'}
+                            </small>
+                          </div>
+                          <div className="flex shrink-0 gap-2">
+                            {canModifyPiece ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => openPieceForm(view.islandId, view.roomId, item.id)}
+                                  className="border border-[#6e9a91] bg-[#174653] px-3 py-1.5 text-xs text-[#eff4dd] hover:bg-[#246975]"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemovePiece(view.islandId, view.roomId, item)}
+                                  className="border border-[#bd7967] bg-[#533b3a] px-3 py-1.5 text-xs text-[#ffd5c7] hover:bg-[#6a4846]"
+                                >
+                                  {isCloud || item.custom ? 'Eliminar' : 'Ocultar'}
+                                </button>
+                              </>
+                            ) : (
+                              <span className="border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] text-[#9fc4b8]">
+                                Del anfitrión
                               </span>
                             )}
                           </div>
-                          <small className="block truncate text-xs text-[#a8c8bc]">
-                            {item.subtitle || item.kind}
-                            {item.curatedFrom
-                              ? ` · de «${item.curatedFrom.sourceMuseumTitle}»`
-                              : isCloud
-                                ? ' · en la nube'
-                                : item.custom
-                                  ? ' · añadida por ti'
-                                  : ' · colección original'}
-                          </small>
                         </div>
-                        <div className="flex shrink-0 gap-2">
-                          {canModifyPiece ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => openPieceForm(view.islandId, view.roomId, item.id)}
-                                className="border border-[#6e9a91] bg-[#174653] px-3 py-1.5 text-xs text-[#eff4dd] hover:bg-[#246975]"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRemovePiece(view.islandId, view.roomId, item)}
-                                className="border border-[#bd7967] bg-[#533b3a] px-3 py-1.5 text-xs text-[#ffd5c7] hover:bg-[#6a4846]"
-                              >
-                                {isCloud || item.custom ? 'Eliminar' : 'Ocultar'}
-                              </button>
-                            </>
-                          ) : (
-                            <span className="border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] text-[#9fc4b8]">
-                              Del anfitrión
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
 
                 {source.kind === 'local' &&

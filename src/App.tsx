@@ -71,6 +71,7 @@ import {
   MuseumThemeConfig,
   Room,
 } from './types/museum';
+import { sortPiecesForRoom } from './utils/pieceOrdering';
 
 type ActiveMuseum =
   | { kind: 'flagship' }
@@ -469,14 +470,17 @@ export default function App() {
 
   const getActivePiecesForRoom = useCallback(
     (islandId: string, roomId: string): MuseumPiece[] => {
+      const room = getActiveRoomsForIsland(islandId).find((r) => r.id === roomId);
       if (activeMuseum.kind === 'cloud') {
-        return activeMuseum.pieces.filter(
+        const rawPieces = activeMuseum.pieces.filter(
           (p) => p.islandId === islandId && p.roomId === roomId
         );
+        return sortPiecesForRoom(rawPieces, room);
       }
-      return getPiecesForRoom(museumState, islandId, roomId).map(mergeFlagshipPieceCommerce);
+      const rawLocal = getPiecesForRoom(museumState, islandId, roomId).map(mergeFlagshipPieceCommerce);
+      return sortPiecesForRoom(rawLocal, room);
     },
-    [activeMuseum, museumState, mergeFlagshipPieceCommerce]
+    [activeMuseum, getActiveRoomsForIsland, museumState, mergeFlagshipPieceCommerce]
   );
 
   const roomCounts = useMemo(() => {

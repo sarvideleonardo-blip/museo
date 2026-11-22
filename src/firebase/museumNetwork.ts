@@ -91,12 +91,20 @@ function sanitizeIslands(islands: Island[]): Island[] {
 }
 
 function sanitizeRooms(rooms: Room[]): Room[] {
-  return rooms.slice(0, 60).map((r) => ({
-    id: cleanId(r.id, 'room'),
-    islandId: cleanId(r.islandId, 'isl'),
-    name: clampStr(r.name || 'Sala', 80),
-    description: clampStr(r.description || '', 300),
-  }));
+  return rooms.slice(0, 60).map((r) => {
+    const sanitized: Room = {
+      id: cleanId(r.id, 'room'),
+      islandId: cleanId(r.islandId, 'isl'),
+      name: clampStr(r.name || 'Sala', 80),
+      description: clampStr(r.description || '', 300),
+    };
+    if (Array.isArray(r.pieceOrder)) {
+      sanitized.pieceOrder = r.pieceOrder
+        .slice(0, 100)
+        .map((pId) => cleanId(String(pId), 'piece'));
+    }
+    return sanitized;
+  });
 }
 
 function sanitizeCuratedFrom(c: CuratedFromMeta): CuratedFromMeta {

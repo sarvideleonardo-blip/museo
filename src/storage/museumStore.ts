@@ -72,6 +72,9 @@ export function loadMuseumState(): MuseumState {
             islandId,
             name: String(r.name || 'Sala'),
             description: String(r.description || ''),
+            ...(Array.isArray(r.pieceOrder)
+              ? { pieceOrder: r.pieceOrder.map(String) }
+              : {}),
           }));
         }
       }
@@ -392,6 +395,9 @@ export async function importMuseumBackup(file: File): Promise<MuseumState> {
           islandId,
           name: String(r.name || 'Sala'),
           description: String(r.description || ''),
+          ...(Array.isArray(r.pieceOrder)
+            ? { pieceOrder: r.pieceOrder.map(String) }
+            : {}),
         }));
       }
     }
