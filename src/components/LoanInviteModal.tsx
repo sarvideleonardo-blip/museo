@@ -7,6 +7,7 @@ import {
   fetchMyGuestLoans,
 } from '../firebase/interactions';
 import { CloudMuseum, IslandInvite } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface LoanInviteModalProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export const LoanInviteModal: React.FC<LoanInviteModalProps> = ({
   onOpenMuseumById,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
   const [codeInput, setCodeInput] = useState('');
   const [invite, setInvite] = useState<IslandInvite | null>(null);
   const [loading, setLoading] = useState(false);
@@ -180,6 +182,7 @@ export const LoanInviteModal: React.FC<LoanInviteModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Invitación a Isla Prestada"
@@ -206,7 +209,7 @@ export const LoanInviteModal: React.FC<LoanInviteModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar ventana"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>

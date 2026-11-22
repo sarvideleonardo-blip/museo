@@ -5,6 +5,7 @@ import { retroAudio } from '../game/audio';
 import { renderProceduralPainting } from '../game/spriteRenderer';
 import { getMedia } from '../storage/mediaDb';
 import { FrameStyle, InteractiveAppData, MuseumPiece, PaintingData } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 export type ModalPayload =
   | { kind: 'dialogue'; title: string; lines: string[]; subtitle?: string; piece?: MuseumPiece }
@@ -69,6 +70,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
   onToast,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen: Boolean(payload), onClose });
   const [lineIndex, setLineIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -510,9 +512,11 @@ export const ContentModal: React.FC<ContentModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#02141f]/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
+      aria-label="Detalle de contenido o interactivo"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -522,7 +526,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Cerrar ventana"
-          className="float-right ml-4 flex h-9 w-9 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#163d4a]"
+          className="float-right ml-4 flex min-h-[44px] min-w-[44px] items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#163d4a]"
         >
           <X className="h-4 w-4" />
         </button>

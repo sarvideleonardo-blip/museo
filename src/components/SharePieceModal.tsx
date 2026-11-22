@@ -4,6 +4,7 @@ import { LogIn, Plus, Share2, X } from 'lucide-react';
 import { curatePieceIntoMuseum } from '../firebase/museumNetwork';
 import { compactImageToDataUrl, getMedia } from '../storage/mediaDb';
 import { CloudMuseum, MuseumPiece } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface SharePieceModalProps {
   piece: MuseumPiece | null;
@@ -30,6 +31,7 @@ export const SharePieceModal: React.FC<SharePieceModalProps> = ({
   onCurated,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen: Boolean(piece), onClose });
   const [targetMuseumId, setTargetMuseumId] = useState<string>('');
   const [targetIslandId, setTargetIslandId] = useState<string>('');
   const [targetRoomId, setTargetRoomId] = useState<string>('');
@@ -124,6 +126,7 @@ export const SharePieceModal: React.FC<SharePieceModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Compartir obra en mi museo"
@@ -149,7 +152,7 @@ export const SharePieceModal: React.FC<SharePieceModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>

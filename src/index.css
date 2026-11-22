@@ -20,6 +20,30 @@
     outline: 2px solid #f4d47d;
     outline-offset: 2px;
   }
+
+  /* Accessible focus rings on light surfaces/modals (WCAG AA 4.5:1+) */
+  :where([class*="bg-[#f1efd9]"], [class*="bg-[#faf8eb]"], [class*="bg-[#e6e3ca]"], [class*="bg-[#ebe8d1]"], [class*="bg-white"]) :where(button, a, input, select, textarea):focus-visible,
+  .light-surface :where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid #163d4a;
+    outline-offset: 2px;
+  }
+}
+
+/* Minimum 44x44px touch target utility for accessible controls without distorting visual size */
+.touch-target-min {
+  position: relative;
+}
+
+.touch-target-min::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
 }
 
 .font-pixel {

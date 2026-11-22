@@ -53,6 +53,7 @@ import {
   makeId,
   suggestIslandPosition,
 } from '../storage/museumStore';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 import {
   CharacterId,
   CloudMuseum,
@@ -141,6 +142,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
   initialViewMode,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen: true, onClose });
   const isCloud = source.kind === 'cloud';
   const esInvitado = Boolean(source.kind === 'cloud' && source.guestAccess);
   const guestAccess = source.kind === 'cloud' ? source.guestAccess : undefined;
@@ -1290,6 +1292,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Editor del museo"
@@ -1323,7 +1326,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                   disabled={localUndoStack.length === 0}
                   onClick={handleUndoLocal}
                   title="Deshacer el último cambio local"
-                  className="inline-flex min-h-[38px] items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58] disabled:opacity-45 tabular-nums"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58] disabled:opacity-45 tabular-nums"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   Deshacer{localUndoStack.length > 0 ? ` (${localUndoStack.length})` : ''}
@@ -1334,7 +1337,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                     await exportMuseumBackup(source.state);
                     setNotice('Copia de seguridad exportada.');
                   }}
-                  className="inline-flex min-h-[38px] items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58]"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58]"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Exportar copia
@@ -1342,7 +1345,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                 <button
                   type="button"
                   onClick={() => backupInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58]"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 border border-[#d8c47b] bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58]"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   Importar copia
@@ -1377,7 +1380,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Cerrar editor"
-              className="flex h-9 w-9 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1394,7 +1397,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
               <button
                 type="button"
                 onClick={() => setView({ mode: 'appearance' })}
-                className={`flex shrink-0 items-center justify-center gap-2 border px-3 py-2.5 text-sm font-bold transition-colors ${
+                className={`flex min-h-[44px] shrink-0 items-center justify-center gap-2 border px-3 py-2.5 text-sm font-bold transition-colors ${
                   view.mode === 'appearance'
                     ? 'border-[#f1d17c] bg-[#1d6873] text-[#fff9e8]'
                     : 'border-[#f1d17c]/45 bg-[#0f3644] text-[#f4d47d] hover:bg-[#174d58]'
@@ -1409,7 +1412,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
               <button
                 type="button"
                 onClick={() => setView({ mode: 'inquiries' })}
-                className={`flex shrink-0 items-center justify-center gap-2 border px-3 py-2.5 text-sm font-bold transition-colors ${
+                className={`flex min-h-[44px] shrink-0 items-center justify-center gap-2 border px-3 py-2.5 text-sm font-bold transition-colors ${
                   view.mode === 'inquiries'
                     ? 'border-[#f1d17c] bg-[#b25f37] text-[#fff9e8]'
                     : 'border-[#f1d17c]/45 bg-[#0f3644] text-[#f4d47d] hover:bg-[#174d58]'
@@ -1429,7 +1432,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                   setNewIslY(nextPos.y);
                   setView({ mode: 'new-island' });
                 }}
-                className={`flex shrink-0 items-center justify-center gap-2 border border-dashed px-3 py-2.5 text-sm font-bold transition-colors ${
+                className={`flex min-h-[44px] shrink-0 items-center justify-center gap-2 border border-dashed px-3 py-2.5 text-sm font-bold transition-colors ${
                   view.mode === 'new-island'
                     ? 'border-[#f1d17c] bg-[#bd7544] text-[#fff9e8]'
                     : 'border-[#f1d17c]/70 bg-[#174d58]/50 text-[#f4d47d] hover:bg-[#174d58]'
@@ -1453,7 +1456,7 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
                   key={isl.id}
                   type="button"
                   onClick={() => selectIsland(isl.id)}
-                  className={`min-w-[155px] shrink-0 border p-3 text-left transition-colors md:min-w-0 md:w-full ${
+                  className={`min-w-[155px] min-h-[44px] shrink-0 border p-3 text-left transition-colors md:min-w-0 md:w-full ${
                     isSelected
                       ? 'border-[#f1d17c] bg-[#dbb85c]/15'
                       : 'border-[#e0d7a5]/20 bg-white/[0.04] hover:bg-white/[0.08]'

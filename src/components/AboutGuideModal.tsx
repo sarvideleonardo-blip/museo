@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, Code2, Compass, Heart, KeyRound, Pencil, Sparkles, X } from 'lucide-react';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface AboutGuideModalProps {
   isOpen: boolean;
@@ -25,28 +26,18 @@ export const AboutGuideModal: React.FC<AboutGuideModalProps> = ({
   onClose,
 }) => {
   const [tab, setTab] = useState<GuideTab>('about');
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
 
   useEffect(() => {
     if (!isOpen) return;
     setTab('about');
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Acerca de MUSEO 404 y guía de uso"
@@ -58,14 +49,14 @@ export const AboutGuideModal: React.FC<AboutGuideModalProps> = ({
       <div className="flex max-h-[89vh] w-full max-w-[780px] flex-col overflow-hidden border-[3px] border-[#163d4a] bg-[#f1efd9] text-[#1c343a] shadow-[0_0_0_3px_#e2c56c,0_24px_70px_rgba(0,0,0,0.62)]">
         <header className="flex items-start justify-between gap-4 border-b border-[#163d4a]/20 bg-[#e6e3ca] px-6 py-4">
           <div className="min-w-0">
-            <p className="font-pixel flex items-center gap-2 text-[9px] tracking-wider text-[#b25f37]">
+            <p className="font-pixel flex items-center gap-2 text-[9px] tracking-wider text-[#8b3a1a]">
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
               <span>ARCHIVO VIVO · GUÍA DE USO</span>
             </p>
             <h2 className="mt-1.5 text-2xl font-bold leading-tight text-[#163d4a]">
               MUSEO 404
             </h2>
-            <p className="mt-1 text-sm font-semibold text-[#436569]">
+            <p className="mt-1 text-sm font-semibold text-[#35575b]">
               Tu museo. Tus reglas. Nuestra comunidad.
             </p>
           </div>
@@ -73,7 +64,7 @@ export const AboutGuideModal: React.FC<AboutGuideModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar guía"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -96,10 +87,10 @@ export const AboutGuideModal: React.FC<AboutGuideModalProps> = ({
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`mr-2 border border-b-0 px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+              className={`mr-2 min-h-[44px] border border-b-0 px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
                 tab === item.id
-                  ? 'border-[#163d4a]/35 bg-[#f1efd9] text-[#a24d2e]'
-                  : 'border-transparent bg-transparent text-[#4c6f73] hover:text-[#163d4a]'
+                  ? 'border-[#163d4a]/35 bg-[#f1efd9] text-[#8b3a1a]'
+                  : 'border-transparent bg-transparent text-[#35575b] hover:text-[#163d4a]'
               }`}
             >
               {item.label}

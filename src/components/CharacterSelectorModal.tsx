@@ -4,6 +4,7 @@ import { CHARACTER_PROFILES, CharacterProfile } from '../data/characters';
 import { retroAudio } from '../game/audio';
 import { spriteRenderer } from '../game/spriteRenderer';
 import { CharacterId } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface CharacterSelectorModalProps {
   isOpen: boolean;
@@ -40,22 +41,13 @@ export const CharacterSelectorModal: React.FC<CharacterSelectorModalProps> = ({
   onSelectCharacter,
   onClose,
 }) => {
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
 
   if (!isOpen) return null;
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Elegir personaje"
@@ -80,7 +72,7 @@ export const CharacterSelectorModal: React.FC<CharacterSelectorModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar selector de personaje"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>

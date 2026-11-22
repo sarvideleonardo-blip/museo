@@ -13,6 +13,7 @@ import {
   MuseumThemeConfig,
   ThemeId,
 } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface CreateMuseumModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export const CreateMuseumModal: React.FC<CreateMuseumModalProps> = ({
   onCreated,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
   const [templateId, setTemplateId] = useState<string>(MUSEUM_TEMPLATES[0].id);
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState(MUSEUM_TEMPLATES[0].defaultSubtitle);
@@ -47,18 +49,6 @@ export const CreateMuseumModal: React.FC<CreateMuseumModalProps> = ({
       setAuthorName(authUser.displayName);
     }
   }, [authUser, authorName]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -103,6 +93,7 @@ export const CreateMuseumModal: React.FC<CreateMuseumModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Crear nuevo museo"
@@ -127,7 +118,7 @@ export const CreateMuseumModal: React.FC<CreateMuseumModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar creación de museo"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>

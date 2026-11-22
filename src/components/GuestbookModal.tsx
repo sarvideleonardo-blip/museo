@@ -9,6 +9,7 @@ import {
 } from '../firebase/interactions';
 import { retroAudio } from '../game/audio';
 import { GuestbookEntry } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface GuestbookModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
   onClose,
   onToast,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
   const [scopeFilter, setScopeFilter] = useState<'room' | 'all'>(
     roomId === 'reception' ? 'all' : 'room'
   );
@@ -184,6 +186,7 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Libro de visitas del museo"
@@ -200,10 +203,10 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
               <span>LIBRO DE VISITAS · {museumTitle.toUpperCase()}</span>
             </p>
-            <h2 className="mt-1.5 text-2xl font-bold leading-tight text-[#a24d2e]">
+            <h2 className="mt-1.5 text-2xl font-bold leading-tight text-[#8b3a1a]">
               {scopeLabel}
             </h2>
-            <p className="mt-1 text-sm text-[#436569]">
+            <p className="mt-1 text-sm font-semibold text-[#35575b]">
               Deja una impresión, un saludo o una nota de lectura. Abierto a cualquier visitante sin registro.
             </p>
           </div>
@@ -211,7 +214,7 @@ export const GuestbookModal: React.FC<GuestbookModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar libro de visitas"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>

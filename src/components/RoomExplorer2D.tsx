@@ -761,7 +761,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
           <button
             type="button"
             onClick={onExitToArchipelago}
-            className="font-pixel inline-flex items-center gap-2 border-2 border-[#e1c875] bg-[#174d58] px-3 py-2 text-[9px] text-[#fff9e6] transition-colors hover:bg-[#b25f37] whitespace-nowrap shrink-0"
+            className="font-pixel inline-flex min-h-[44px] items-center gap-2 border-2 border-[#e1c875] bg-[#174d58] px-3 py-2 text-[9px] text-[#fff9e6] transition-colors hover:bg-[#b25f37] whitespace-nowrap shrink-0"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>ARCHIPIÉLAGO</span>
@@ -802,7 +802,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
                 const activeRoomObj = rooms.find((r) => r.id === currentRoomId) || rooms[0];
                 if (activeRoomObj) onOpenGuestbook(island, activeRoomObj);
               }}
-              className="inline-flex items-center gap-1.5 border border-[#f2d17b] bg-[#b25f37] px-2.5 py-1.5 text-xs font-semibold text-[#fff9e6] hover:bg-[#174d58] whitespace-nowrap"
+              className="inline-flex min-h-[44px] items-center gap-1.5 border border-[#f2d17b] bg-[#b25f37] px-2.5 py-1.5 text-xs font-semibold text-[#fff9e6] hover:bg-[#174d58] whitespace-nowrap"
             >
               <BookOpen className="h-3.5 w-3.5 text-[#f4d47d]" />
               <span>Visitas</span>
@@ -815,7 +815,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
               setLightMode(nextL);
             }}
             title="Alternar luz [L]"
-            className="inline-flex items-center gap-1.5 border border-white/40 bg-[#0d3545] px-2.5 py-1.5 text-xs text-[#fff5d7] hover:bg-[#174d58] whitespace-nowrap"
+            className="inline-flex min-h-[44px] items-center gap-1.5 border border-white/40 bg-[#0d3545] px-2.5 py-1.5 text-xs text-[#fff5d7] hover:bg-[#174d58] whitespace-nowrap"
           >
             <Sun className="h-3.5 w-3.5 text-[#f4d47d]" />
             <span>Luz: {lightMode}</span>
@@ -824,7 +824,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
             type="button"
             onClick={() => setThemeId(spriteRenderer.nextTheme())}
             title="Cambiar paleta [P]"
-            className="inline-flex items-center gap-1.5 border border-white/40 bg-[#0d3545] px-2.5 py-1.5 text-xs text-[#fff5d7] hover:bg-[#174d58] whitespace-nowrap"
+            className="inline-flex min-h-[44px] items-center gap-1.5 border border-white/40 bg-[#0d3545] px-2.5 py-1.5 text-xs text-[#fff5d7] hover:bg-[#174d58] whitespace-nowrap"
           >
             <Palette className="h-3.5 w-3.5 text-[#75e4dc]" />
             <span className="hidden sm:inline">{themeId}</span>
@@ -833,7 +833,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
             type="button"
             onClick={() => setIsMuted(retroAudio.toggleMute())}
             aria-label={isMuted ? 'Activar sonido' : 'Silenciar sonido'}
-            className="inline-flex items-center justify-center border border-white/40 bg-[#0d3545] p-1.5 text-[#fff5d7] hover:bg-[#174d58]"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/40 bg-[#0d3545] p-1.5 text-[#fff5d7] hover:bg-[#174d58]"
           >
             {isMuted ? <VolumeX className="h-4 w-4 text-[#e87967]" /> : <Volume2 className="h-4 w-4 text-[#75e4dc]" />}
           </button>
@@ -841,7 +841,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
             type="button"
             onClick={showRoomHelp}
             aria-label="Ayuda de controles"
-            className="inline-flex items-center justify-center border border-white/40 bg-[#0d3545] p-1.5 text-[#fff5d7] hover:bg-[#174d58]"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/40 bg-[#0d3545] p-1.5 text-[#fff5d7] hover:bg-[#174d58]"
           >
             <HelpCircle className="h-4 w-4" />
           </button>
@@ -909,7 +909,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
               type="button"
               {...bindVirtualKey('ArrowUp')}
               aria-label="Subir"
-              className="flex h-10 w-10 items-center justify-center border border-white/45 bg-[#07414f] text-sm font-bold text-white"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/45 bg-[#07414f] text-base font-bold text-white touch-manipulation"
             >
               ▲
             </button>
@@ -918,7 +918,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
               type="button"
               {...bindVirtualKey('ArrowLeft')}
               aria-label="Izquierda"
-              className="flex h-10 w-10 items-center justify-center border border-white/45 bg-[#07414f] text-sm font-bold text-white"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/45 bg-[#07414f] text-base font-bold text-white touch-manipulation"
             >
               ◀
             </button>
@@ -926,7 +926,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
               type="button"
               {...bindVirtualKey('ArrowDown')}
               aria-label="Bajar"
-              className="flex h-10 w-10 items-center justify-center border border-white/45 bg-[#07414f] text-sm font-bold text-white"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/45 bg-[#07414f] text-base font-bold text-white touch-manipulation"
             >
               ▼
             </button>
@@ -934,7 +934,7 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
               type="button"
               {...bindVirtualKey('ArrowRight')}
               aria-label="Derecha"
-              className="flex h-10 w-10 items-center justify-center border border-white/45 bg-[#07414f] text-sm font-bold text-white"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/45 bg-[#07414f] text-base font-bold text-white touch-manipulation"
             >
               ▶
             </button>
@@ -944,14 +944,16 @@ export const RoomExplorer2D: React.FC<RoomExplorer2DProps> = ({
             <button
               type="button"
               onClick={showRoomHelp}
-              className="font-pixel flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/60 bg-[#07414f]/90 text-xs text-white"
+              aria-label="Información de sala (B)"
+              className="font-pixel flex min-h-[44px] min-w-[44px] h-12 w-12 items-center justify-center rounded-full border-2 border-white/60 bg-[#07414f]/90 text-xs text-white touch-manipulation"
             >
               B
             </button>
             <button
               type="button"
               onClick={triggerInteraction}
-              className="font-pixel flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#f2d17b] bg-[#b25f37]/90 text-xs text-white"
+              aria-label="Interactuar o examinar obra (A)"
+              className="font-pixel flex min-h-[44px] min-w-[44px] h-12 w-12 items-center justify-center rounded-full border-2 border-[#f2d17b] bg-[#b25f37]/90 text-xs text-white touch-manipulation"
             >
               A
             </button>

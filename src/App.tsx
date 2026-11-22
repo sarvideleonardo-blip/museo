@@ -802,7 +802,8 @@ export default function App() {
               setDirectoryOpen(true);
             }}
             style={{ borderColor: activeTheme.accentColor }}
-            className="font-pixel inline-flex items-center gap-1.5 border-2 bg-[#0b4757]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#136578] whitespace-nowrap"
+            aria-label="Explorar todos los museos"
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 bg-[#0b4757]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#136578] whitespace-nowrap"
           >
             <Compass className="h-3.5 w-3.5" style={{ color: activeTheme.accentColor }} />
             <span>MUSEOS</span>
@@ -811,7 +812,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => setCharacterModalOpen(true)}
-            className="font-pixel inline-flex items-center gap-1.5 border-2 border-white/65 bg-[#053143]/85 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
+            aria-label={`Cambiar personaje de exploración. Personaje actual: ${currentCharProfile.name}`}
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-white/65 bg-[#053143]/85 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
             title={`Personaje actual: ${currentCharProfile.name}`}
           >
             <UserIcon className="h-3.5 w-3.5" style={{ color: activeTheme.accentColor }} />
@@ -822,7 +824,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => setWorldView((prev) => (prev === '3d' ? 'map' : '3d'))}
-            className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#0c4a59]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#136578] whitespace-nowrap"
+            aria-label={worldView === '3d' ? 'Cambiar a vista de Mapa 2D' : 'Cambiar a vista de Caminar en 3D'}
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#0c4a59]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#136578] whitespace-nowrap"
           >
             {worldView === '3d' ? (
               <>
@@ -840,7 +843,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => setBgmActive(retroAudio.toggleBgm())}
-            className="font-pixel inline-flex items-center gap-1.5 border-2 border-white/65 bg-[#053143]/80 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
+            aria-label={bgmActive ? 'Desactivar sonido ambiental' : 'Activar sonido ambiental'}
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-white/65 bg-[#053143]/80 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
           >
             {bgmActive ? <Volume2 className="h-3.5 w-3.5 text-[#f4d47d]" /> : <VolumeX className="h-3.5 w-3.5" />}
             <span className="hidden md:inline">{bgmActive ? 'SONIDO: ON' : 'SONIDO'}</span>
@@ -849,7 +853,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => setAboutModalOpen(true)}
-            className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#f2d17b]/80 bg-[#053143]/85 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
+            aria-label="Abrir manifiesto y guía de uso"
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#f2d17b]/80 bg-[#053143]/85 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
           >
             <HelpCircle className="h-3.5 w-3.5 text-[#f4d47d]" />
             <span className="hidden md:inline">MANIFIESTO</span>
@@ -864,7 +869,8 @@ export default function App() {
                 scopeLabel: 'Recepción · Patio 404',
               })
             }
-            className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#053143]/85 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
+            aria-label="Abrir libro de visitas"
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#053143]/85 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#084d5b] whitespace-nowrap"
           >
             <BookOpen className="h-3.5 w-3.5 text-[#f4d47d]" />
             <span className="hidden sm:inline">VISITAS</span>
@@ -873,7 +879,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => setSupportModalOpen(true)}
-            className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#f2d17b] bg-[#8f432b]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#b25f37] whitespace-nowrap"
+            aria-label="Apoyar el proyecto"
+            className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#f2d17b] bg-[#8f432b]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#b25f37] whitespace-nowrap"
           >
             <Heart className="h-3.5 w-3.5 text-[#ffe19c]" />
             <span className="hidden sm:inline">APOYAR</span>
@@ -883,7 +890,8 @@ export default function App() {
             <button
               type="button"
               onClick={() => openEditorForCurrentMuseum()}
-              className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#f2d17b] bg-[#724527]/95 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#8d5531] whitespace-nowrap"
+              aria-label="Abrir editor del museo"
+              className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#f2d17b] bg-[#724527]/95 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#8d5531] whitespace-nowrap"
             >
               <Pencil className="h-3.5 w-3.5 text-[#f4d47d]" />
               <span>EDITAR MUSEO</span>
@@ -892,7 +900,8 @@ export default function App() {
             <button
               type="button"
               onClick={openGuestEditorForLoan}
-              className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#145869]/95 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#1c7388] whitespace-nowrap"
+              aria-label="Abrir editor de isla prestada"
+              className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#145869]/95 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#1c7388] whitespace-nowrap"
             >
               <Sparkles className="h-3.5 w-3.5 text-[#f4d47d]" />
               <span>EDITAR ISLA PRESTADA</span>
@@ -901,7 +910,8 @@ export default function App() {
             <button
               type="button"
               onClick={() => setCreateMuseumOpen(true)}
-              className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#f2d17b] bg-[#724527]/95 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#8d5531] whitespace-nowrap"
+              aria-label="Crear mi museo personal"
+              className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#f2d17b] bg-[#724527]/95 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#8d5531] whitespace-nowrap"
             >
               <Plus className="h-3.5 w-3.5 text-[#f4d47d]" />
               <span>CREAR MI MUSEO</span>
@@ -915,8 +925,9 @@ export default function App() {
                 await signOutCreator();
                 showToast('Sesión cerrada.');
               }}
+              aria-label={`Conectado como ${authUser.displayName || 'Creador'}. Clic para cerrar sesión.`}
               title={`Conectado como ${authUser.displayName || 'Creador'}. Clic para cerrar sesión.`}
-              className="font-pixel inline-flex items-center gap-1.5 border-2 border-white/55 bg-[#053143]/85 px-2.5 py-2.5 text-[9px] text-[#d0e6da] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#603d3d] hover:text-white whitespace-nowrap"
+              className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-white/55 bg-[#053143]/85 px-2.5 py-2.5 text-[9px] text-[#d0e6da] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#603d3d] hover:text-white whitespace-nowrap"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden lg:inline">SALIR</span>
@@ -925,7 +936,8 @@ export default function App() {
             <button
               type="button"
               onClick={handleSignIn}
-              className="font-pixel inline-flex items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#145869]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#1c7388] whitespace-nowrap"
+              aria-label="Iniciar sesión con Google"
+              className="font-pixel inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#7fd6cc] bg-[#145869]/90 px-3 py-2.5 text-[9px] text-[#fff9e6] shadow-[0_4px_0_rgba(3,35,48,0.36)] transition-transform hover:-translate-y-0.5 hover:bg-[#1c7388] whitespace-nowrap"
             >
               <LogIn className="h-3.5 w-3.5 text-[#f4d47d]" />
               <span>ENTRAR</span>

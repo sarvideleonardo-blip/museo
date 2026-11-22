@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Compass, ArrowLeft, Share2, BookOpen } from 'lucide-react';
 import { getMedia } from '../storage/mediaDb';
 import { Island, MuseumPiece, MuseumThemeConfig, Room } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface IslandDrawerProps {
   island: Island | null;
@@ -68,6 +69,8 @@ export const IslandDrawer: React.FC<IslandDrawerProps> = ({
   onOpenOriginMuseum,
   onClose,
 }) => {
+  const drawerRef = useModalFocusTrap({ isOpen: Boolean(island), onClose });
+
   if (!island) return null;
 
   const activeRoom =
@@ -84,6 +87,7 @@ export const IslandDrawer: React.FC<IslandDrawerProps> = ({
 
   return (
     <aside
+      ref={drawerRef}
       aria-live="polite"
       aria-label="Colección de la isla"
       style={{
@@ -142,7 +146,7 @@ export const IslandDrawer: React.FC<IslandDrawerProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Cerrar panel"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center border border-white/45 bg-black/25 text-white transition-colors hover:bg-[#b25f37]"
+          className="absolute right-3 top-3 flex min-h-[44px] min-w-[44px] items-center justify-center border border-white/45 bg-black/25 text-white transition-colors hover:bg-[#b25f37]"
         >
           <X className="h-4 w-4" />
         </button>
@@ -153,7 +157,7 @@ export const IslandDrawer: React.FC<IslandDrawerProps> = ({
               type="button"
               onClick={() => onEnter2DMode(island.id, (activeRoom || rooms[0]).id)}
               style={{ borderColor: accentColor }}
-              className="font-pixel flex flex-1 items-center justify-center gap-2 border-2 bg-[#1d6873] px-3 py-2.5 text-[9px] text-[#fff9e8] transition-colors hover:bg-[#b25f37]"
+              className="font-pixel flex min-h-[44px] flex-1 items-center justify-center gap-2 border-2 bg-[#1d6873] px-3 py-2.5 text-[9px] text-[#fff9e8] transition-colors hover:bg-[#b25f37]"
             >
               <Compass className="h-3.5 w-3.5 shrink-0" />
               <span>EXPLORAR 2D</span>
@@ -163,7 +167,7 @@ export const IslandDrawer: React.FC<IslandDrawerProps> = ({
             <button
               type="button"
               onClick={() => onOpenGuestbook(island, activeRoom)}
-              className="font-pixel inline-flex items-center justify-center gap-1.5 border-2 border-white/55 bg-[#0a3646] px-3 py-2.5 text-[9px] text-[#fff9e8] transition-colors hover:bg-[#175566]"
+              className="font-pixel inline-flex min-h-[44px] items-center justify-center gap-1.5 border-2 border-white/55 bg-[#0a3646] px-3 py-2.5 text-[9px] text-[#fff9e8] transition-colors hover:bg-[#175566]"
               title="Abrir libro de visitas de esta sala o isla"
             >
               <BookOpen className="h-3.5 w-3.5 shrink-0" style={{ color: accentColor }} />

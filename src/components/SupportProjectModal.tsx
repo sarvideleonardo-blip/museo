@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Code2, Compass, ExternalLink, Heart, Palette, Users, X } from 'lucide-react';
 import { DonationConfig } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface SupportProjectModalProps {
   isOpen: boolean;
@@ -31,24 +32,13 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
   onOpenGuide,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
   const [tab, setTab] = useState<'donate' | 'contribute'>('donate');
 
   useEffect(() => {
     if (!isOpen) return;
     setTab('donate');
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -61,6 +51,7 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Apoyar y aportar al proyecto"
@@ -73,14 +64,14 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
         {/* Cabecera */}
         <header className="flex items-start justify-between gap-4 border-b border-[#163d4a]/20 bg-[#e6e3ca] px-6 py-4">
           <div className="min-w-0">
-            <p className="font-pixel flex items-center gap-2 text-[9px] tracking-wider text-[#b25f37]">
+            <p className="font-pixel flex items-center gap-2 text-[9px] tracking-wider text-[#8b3a1a]">
               <Heart className="h-3.5 w-3.5 shrink-0" />
               <span>SOSTENIBILIDAD Y COMUNIDAD ABIERTA</span>
             </p>
             <h2 className="mt-1.5 text-2xl font-bold leading-tight text-[#163d4a]">
               Apoyar y aportar a Museo 404
             </h2>
-            <p className="mt-1 text-sm text-[#436569]">
+            <p className="mt-1 text-sm font-semibold text-[#35575b]">
               Todo el acceso y la exploración son gratuitos. Puedes respaldar directamente a sus creadores o sumarte al desarrollo del proyecto.
             </p>
           </div>
@@ -88,7 +79,7 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Cerrar ventana"
-            className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37]"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-2 border-[#183c49] bg-[#1d6873] text-[#fff9e5] transition-colors hover:bg-[#b25f37]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -99,10 +90,10 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
           <button
             type="button"
             onClick={() => setTab('donate')}
-            className={`mr-2 border border-b-0 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`mr-2 min-h-[44px] border border-b-0 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               tab === 'donate'
-                ? 'border-[#163d4a]/35 bg-[#f1efd9] text-[#a24d2e]'
-                : 'border-transparent bg-transparent text-[#4c6f73] hover:text-[#163d4a]'
+                ? 'border-[#163d4a]/35 bg-[#f1efd9] text-[#8b3a1a]'
+                : 'border-transparent bg-transparent text-[#35575b] hover:text-[#163d4a]'
             }`}
           >
             Apoyar con donación
@@ -110,10 +101,10 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
           <button
             type="button"
             onClick={() => setTab('contribute')}
-            className={`border border-b-0 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`border min-h-[44px] border-b-0 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
               tab === 'contribute'
-                ? 'border-[#163d4a]/35 bg-[#f1efd9] text-[#a24d2e]'
-                : 'border-transparent bg-transparent text-[#4c6f73] hover:text-[#163d4a]'
+                ? 'border-[#163d4a]/35 bg-[#f1efd9] text-[#8b3a1a]'
+                : 'border-transparent bg-transparent text-[#35575b] hover:text-[#163d4a]'
             }`}
           >
             Aportar al proyecto

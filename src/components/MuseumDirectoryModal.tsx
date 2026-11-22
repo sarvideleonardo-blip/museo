@@ -3,6 +3,7 @@ import { User } from 'firebase/auth';
 import { BookOpen, Compass, KeyRound, Link2, Lock, LogIn, Pencil, Plus, RefreshCw, Search, Shuffle, Sparkles, X } from 'lucide-react';
 import { CATEGORY_META } from '../data/themes';
 import { CloudMuseum, MuseumCategory } from '../types/museum';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface MuseumDirectoryModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
   onSignIn,
   onClose,
 }) => {
+  const dialogRef = useModalFocusTrap({ isOpen, onClose });
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | MuseumCategory>('all');
   const [jumpInput, setJumpInput] = useState('');
@@ -111,6 +113,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Directorio de museos"
@@ -136,7 +139,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
               type="button"
               onClick={onRefresh}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 border border-[#d8c47b]/70 bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58] disabled:opacity-50"
+              className="inline-flex min-h-[44px] items-center gap-1.5 border border-[#d8c47b]/70 bg-[#062230] px-3 py-2 text-xs font-semibold text-[#fff5d7] hover:bg-[#174d58] disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
               Actualizar
@@ -147,7 +150,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
                 onClose();
                 onOpenInviteModal();
               }}
-              className="inline-flex items-center gap-1.5 border border-[#7fd6cc] bg-[#0e3f4e] px-3 py-2 text-xs font-semibold text-[#e6fbf8] hover:bg-[#175b6e]"
+              className="inline-flex min-h-[44px] items-center gap-1.5 border border-[#7fd6cc] bg-[#0e3f4e] px-3 py-2 text-xs font-semibold text-[#e6fbf8] hover:bg-[#175b6e]"
             >
               <KeyRound className="h-3.5 w-3.5 text-[#f4d47d]" />
               Tengo invitación
@@ -155,7 +158,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
             <button
               type="button"
               onClick={onOpenCreateMuseum}
-              className="inline-flex items-center gap-1.5 border-2 border-[#f2d17b] bg-[#bd7544] px-3.5 py-2 text-xs font-bold text-[#fff9e8] hover:bg-[#a24d2e]"
+              className="inline-flex min-h-[44px] items-center gap-1.5 border-2 border-[#f2d17b] bg-[#bd7544] px-3.5 py-2 text-xs font-bold text-[#fff9e8] hover:bg-[#a24d2e]"
             >
               <Plus className="h-3.5 w-3.5" />
               Crear mi museo
@@ -164,7 +167,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Cerrar directorio"
-              className="flex h-9 w-9 items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border border-[#d8c47b] bg-[#174d58] text-white hover:bg-[#b25f37]"
             >
               <X className="h-4 w-4" />
             </button>
