@@ -127,6 +127,89 @@ Archivos especialmente importantes:
 
 ---
 
+## Guía práctica: Cómo diseñar y conectar un nuevo Bioma
+
+Los biomas determinan la apariencia visual y arquitectónica de cada isla a lo largo del archipiélago. Un bioma completo debe coexistir armónicamente tanto en el mapa 2D interactivo como en la vista 3D en perspectiva y en las salas 2D explorables.
+
+### 1. Registrar el tipo de bioma
+Agrega el identificador del bioma al tipo de unión en `src/types/museum.ts`:
+```typescript
+export type IslandBiome =
+  | 'forest'
+  | 'observatory'
+  | 'ice'
+  | 'patio'
+  | 'desert'
+  | 'workshop'
+  | 'volcano'   // Nuevo
+  | 'crypt'     // Nuevo
+  | 'coral';    // Nuevo
+```
+
+### 2. Configurar metadatos y etiquetas
+En `src/data/initialContent.ts`, agrega el nombre legible y la descripción evocadora en `BIOME_LABELS`:
+```typescript
+export const BIOME_LABELS: Record<IslandBiome, { name: string; desc: string }> = {
+  // ...
+  volcano: { name: 'Caldera volcánica', desc: 'Rocas de basalto oscuro, cráter humeante y ríos de magma' },
+};
+```
+En `src/components/MiniCompassRadar.tsx`, agrega el color representativo del bioma para el radar del compás:
+```typescript
+const BIOME_COLORS: Record<Island['biome'], string> = {
+  // ...
+  volcano: '#ff6b4a',
+};
+```
+
+### 3. Conexión al Mapa 2D Isométrico
+1. **Gradiente o patrón SVG**: En `src/components/ArchipelagoMap.tsx`, define los gradientes de superficie correspondientes en el bloque `<defs>`:
+   ```xml
+   <linearGradient id="volcano" x1="0" y1="0" x2="1" y2="1">
+     <stop stopColor="#4a2522" />
+     <stop offset="1" stopColor="#1e1014" />
+   </linearGradient>
+   ```
+2. **Ilustración isométrica**: En `src/components/IslandArtworkSvg.tsx`, añade la rama de renderizado del bioma dentro de `IslandArtworkSvg`. Utiliza polígonos alineados a la rejilla isométrica base centrada en `(205, 110)`:
+   - Capa de sombra elíptica inferior.
+   - Caras de acantilado frontal y laterales.
+   - Plataforma superior texturizada.
+   - Estructura o landmark pixel-art distintivo (conos volcánicos, obeliscos, arrecifes, etc.).
+
+### 4. Conexión a la Sala Explorable 2D (Tilemap)
+En `src/game/roomBuilder.ts`, actualiza `getBiomeTileStyles()` para asignar los caracteres de pared (`W`), suelo (`.`) y si el bioma es exterior (`isOutdoor: true/false`):
+```typescript
+case 'coral':
+  return {
+    wallChar: 'W',
+    floorChar: '.',
+    isOutdoor: true,
+    tileMap: {
+      W: 'bush',
+      '.': 'sand',
+      C: 'path',
+      D: 'door',
+      X: 'exit_portal',
+    },
+  };
+```
+
+### 5. Conexión al Renderizador 3D (Three.js) y Canvas
+1. **Terreno y Materiales 3D**: En `src/three/worldBuilder.ts`:
+   - Configura la asignación de texturas de superficie (`topMat` y `pathMat`) según el bioma.
+   - Añade el hito arquitectónico tridimensional (`landmark`) en la rama correspondiente, reutilizando geometrías y registrándolas en `trackGeo(...)` y `trackMat(...)`.
+   - Añade elementos de vegetación o rocas decorativas (`colliders.push(...)`).
+2. **Vista en Perspectiva 2.5D**: En `src/components/ArchipelagoPerspectiveCanvas.tsx`:
+   - En la generación de props (`landmark` y decoraciones), agrega las coordenadas y escalas de los elementos periféricos.
+   - En la fase de dibujado de hitos (`prop.kind === 'landmark'`), proyecta la silueta estilizada correspondiente al bioma.
+
+### 6. Consideraciones de ciclo de vida y buenas prácticas
+- **Gestión de Memoria GPU**: Nunca instancies texturas de Three.js de manera ad-hoc dentro del bucle de construcción; utiliza las compartidas en `ProceduralTextures` o regístralas en `trackMat`/`trackGeo` para que se liberen con `world.dispose()`.
+- **Accesibilidad y Contraste**: Los textos y badges sobre las islas deben cumplir con ratios de contraste WCAG AA.
+- **Verificación**: Ejecuta siempre `bun test`, `bun run lint` y `bun run build` para asegurar que ningún archivo presente tipos rotos o desalineaciones.
+
+---
+
 ## Guías de estilo rápidas
 
 ### Código

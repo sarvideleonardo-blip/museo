@@ -4,7 +4,10 @@ export type IslandBiome =
   | 'ice'
   | 'patio'
   | 'desert'
-  | 'workshop';
+  | 'workshop'
+  | 'volcano'
+  | 'crypt'
+  | 'coral';
 
 export type PieceType = 'text' | 'image' | 'audio' | 'video' | 'link';
 export type PieceKind = 'text' | 'painting' | 'app' | 'link' | 'image' | 'audio' | 'video';

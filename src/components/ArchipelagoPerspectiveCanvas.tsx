@@ -234,6 +234,26 @@ export const ArchipelagoPerspectiveCanvas: React.FC<ArchipelagoPerspectiveCanvas
           props.push({ kind: 'crystal', x: node.cx + ox, y: DECK_Y, z: node.cz + oz });
           colliders.push({ x: node.cx + ox, z: node.cz + oz, radius: 0.85 });
         }
+      } else if (node.island.biome === 'crypt') {
+        const pillarCoords = [
+          [-6.6, -4.2],
+          [6.8, -4.5],
+          [-6.4, 4.8],
+          [6.5, 4.6],
+        ];
+        for (const [ox, oz] of pillarCoords) {
+          props.push({ kind: 'tree', x: node.cx + ox, y: DECK_Y, z: node.cz + oz, scale: 0.9, tint: '#3e384d' });
+          colliders.push({ x: node.cx + ox, z: node.cz + oz, radius: 0.55 });
+        }
+      } else if (node.island.biome === 'coral') {
+        for (const [ox, oz] of [
+          [-6.5, -4.2],
+          [6.7, -4.0],
+          [-5.8, 5.0],
+        ]) {
+          props.push({ kind: 'crystal', x: node.cx + ox, y: DECK_Y, z: node.cz + oz });
+          colliders.push({ x: node.cx + ox, z: node.cz + oz, radius: 0.8 });
+        }
       }
 
       // Bridge approach lanterns
@@ -1042,9 +1062,12 @@ export const ArchipelagoPerspectiveCanvas: React.FC<ArchipelagoPerspectiveCanvas
 
         const isDesert = node.island.biome === 'desert';
         const isIce = node.island.biome === 'ice';
-        const turfColor = isDesert ? '#d8b46a' : isIce ? '#c3ecf3' : '#65ad72';
-        const pathColor = isDesert ? '#e6c88a' : isIce ? '#e4f8fc' : '#d8c593';
-        const cliffColor = '#6d503b';
+        const isVolcano = node.island.biome === 'volcano';
+        const isCrypt = node.island.biome === 'crypt';
+        const isCoral = node.island.biome === 'coral';
+        const turfColor = isDesert ? '#d8b46a' : isIce ? '#c3ecf3' : isVolcano ? '#382a2d' : isCrypt ? '#453e52' : isCoral ? '#1f6f78' : '#65ad72';
+        const pathColor = isDesert ? '#e6c88a' : isIce ? '#e4f8fc' : isVolcano ? '#543d41' : isCrypt ? '#5c546b' : isCoral ? '#4ecdc4' : '#d8c593';
+        const cliffColor = isVolcano ? '#21181c' : isCrypt ? '#2d2738' : isCoral ? '#14464c' : '#6d503b';
 
         const islDepth = Math.hypot(node.cx - camX, node.cz - camZ) + node.radius * 0.35;
         drawQueue.push({
@@ -1332,6 +1355,49 @@ export const ArchipelagoPerspectiveCanvas: React.FC<ArchipelagoPerspectiveCanvas
                 ctx.fillRect(base.sx - 1.7 * s, base.sy - 5.4 * s, 0.7 * s, 2.1 * s);
                 ctx.fillStyle = '#8ef5ff';
                 ctx.fillRect(base.sx - 1.4 * s, base.sy - 2.4 * s, 2.8 * s, 0.45 * s);
+              } else if (prop.biome === 'volcano') {
+                // Volcanic basalt cone with magma mouth
+                ctx.fillStyle = '#2b1418';
+                ctx.beginPath();
+                ctx.moveTo(base.sx - 2.6 * s, base.sy);
+                ctx.lineTo(base.sx - 1.2 * s, base.sy - 3.4 * s);
+                ctx.lineTo(base.sx + 1.2 * s, base.sy - 3.4 * s);
+                ctx.lineTo(base.sx + 2.6 * s, base.sy);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#ff4d2e';
+                ctx.fillRect(base.sx - 0.9 * s, base.sy - 3.4 * s, 1.8 * s, 0.4 * s);
+                ctx.fillStyle = '#ff9f38';
+                ctx.fillRect(base.sx - 0.45 * s, base.sy - 3.8 * s, 0.9 * s, 0.4 * s);
+              } else if (prop.biome === 'crypt') {
+                // Gothic arch mausoleum
+                ctx.fillStyle = '#443c52';
+                ctx.fillRect(base.sx - 2.0 * s, base.sy - 3.2 * s, 4.0 * s, 3.2 * s);
+                ctx.fillStyle = '#2b2536';
+                ctx.fillRect(base.sx - 0.65 * s, base.sy - 2.2 * s, 1.3 * s, 2.2 * s);
+                ctx.fillStyle = '#655a7a';
+                ctx.beginPath();
+                ctx.moveTo(base.sx - 2.2 * s, base.sy - 3.2 * s);
+                ctx.lineTo(base.sx, base.sy - 4.6 * s);
+                ctx.lineTo(base.sx + 2.2 * s, base.sy - 3.2 * s);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#9df5e8';
+                ctx.fillRect(base.sx - 0.25 * s, base.sy - 1.5 * s, 0.5 * s, 0.7 * s);
+              } else if (prop.biome === 'coral') {
+                // Coral cluster & tidal shrine
+                ctx.fillStyle = '#e85d75';
+                ctx.fillRect(base.sx - 1.8 * s, base.sy - 2.8 * s, 0.9 * s, 2.8 * s);
+                ctx.fillStyle = '#eb6b56';
+                ctx.fillRect(base.sx + 0.9 * s, base.sy - 2.6 * s, 0.9 * s, 2.6 * s);
+                ctx.fillStyle = '#45b8ad';
+                ctx.beginPath();
+                ctx.arc(base.sx, base.sy - 1.8 * s, 1.4 * s, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#bbf5eb';
+                ctx.beginPath();
+                ctx.arc(base.sx, base.sy - 1.8 * s, 0.65 * s, 0, Math.PI * 2);
+                ctx.fill();
               } else {
                 // Forest Stone Archive Gate
                 ctx.fillStyle = '#d2c4a0';

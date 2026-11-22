@@ -500,9 +500,24 @@ export function buildArchipelagoWorld3D(
     const isDesert = island.biome === 'desert';
     const isIce = island.biome === 'ice';
     const isWorkshop = island.biome === 'workshop';
+    const isVolcano = island.biome === 'volcano';
+    const isCrypt = island.biome === 'crypt';
+    const isCoral = island.biome === 'coral';
 
-    const topMat = isDesert ? sandMat : isIce ? iceMat : grassMat;
-    const pathMat = isDesert ? desertPathMat : isIce ? icePathMat : cobbleMat;
+    const topMat = isDesert || isCoral
+      ? sandMat
+      : isIce
+        ? iceMat
+        : isVolcano
+          ? brickMat
+          : isCrypt
+            ? stoneTrimMat
+            : grassMat;
+    const pathMat = isDesert || isCoral
+      ? desertPathMat
+      : isIce
+        ? icePathMat
+        : cobbleMat;
 
     if (islandStyle === 'floating') {
       // Levitating stone shelf + inverted tapered underside spire + cyan energy halo
@@ -964,6 +979,180 @@ export function buildArchipelagoWorld3D(
         puff.position.set(landX - 1.7, DECK_Y + 5.9 + i * 0.9, landZ - 0.8);
         group.add(puff);
         animated.steamPuffs.push({ mesh: puff, baseY: DECK_Y + 5.8, phase: i * 2.1 });
+      }
+    } else if (isVolcano) {
+      // Caldera Volcánica: Stepped basalt caldera cone with glowing lava core
+      const volcano = new THREE.Group();
+      volcano.position.set(landX, DECK_Y, landZ);
+      const basaltMat = trackMat(
+        new THREE.MeshStandardMaterial({ color: 0x221316, roughness: 0.92, metalness: 0.12 })
+      );
+      const lavaMat = trackMat(
+        new THREE.MeshStandardMaterial({
+          color: 0xff3b1f,
+          emissive: 0xff4d2e,
+          emissiveIntensity: 0.85,
+          roughness: 0.35,
+          metalness: 0.1,
+        })
+      );
+      const outerCone = new THREE.Mesh(
+        trackGeo(new THREE.CylinderGeometry(2.4, 4.4, 3.6, 8)),
+        basaltMat
+      );
+      outerCone.position.y = 1.8;
+      outerCone.castShadow = true;
+      outerCone.receiveShadow = true;
+
+      const innerLava = new THREE.Mesh(
+        trackGeo(new THREE.CylinderGeometry(1.7, 1.2, 0.4, 8)),
+        lavaMat
+      );
+      innerLava.position.y = 3.45;
+
+      const vent = new THREE.Mesh(
+        trackGeo(new THREE.DodecahedronGeometry(0.55, 0)),
+        lavaMat
+      );
+      vent.position.y = 3.9;
+
+      volcano.add(outerCone, innerLava, vent);
+      group.add(volcano);
+      colliders.push({ x: landX, z: landZ, radius: 3.2 });
+
+      // Lava rocks / basalt pillars around rim
+      for (const [ox, oz] of [
+        [-6.5, -3.8],
+        [6.6, -4.2],
+        [-6.1, 4.6],
+        [6.3, 4.8],
+      ]) {
+        const rock = new THREE.Mesh(trackGeo(new THREE.DodecahedronGeometry(0.95, 0)), basaltMat);
+        rock.position.set(cx + ox, DECK_Y + 0.65, cz + oz);
+        rock.castShadow = true;
+        group.add(rock);
+        colliders.push({ x: cx + ox, z: cz + oz, radius: 0.75 });
+      }
+    } else if (isCrypt) {
+      // Cripta y Ruinas: Weathered stone mausoleum with gothic spires and spectral glow
+      const crypt = new THREE.Group();
+      crypt.position.set(landX, DECK_Y, landZ);
+      const cryptStoneMat = trackMat(
+        new THREE.MeshStandardMaterial({ color: 0x484054, roughness: 0.82, metalness: 0.08 })
+      );
+      const spectralGlowMat = trackMat(
+        new THREE.MeshStandardMaterial({
+          color: 0x8ef5e4,
+          emissive: 0x5be4cf,
+          emissiveIntensity: 0.65,
+          roughness: 0.25,
+          metalness: 0.2,
+        })
+      );
+
+      const baseHall = new THREE.Mesh(
+        trackGeo(new THREE.BoxGeometry(4.6, 3.2, 3.8)),
+        cryptStoneMat
+      );
+      baseHall.position.y = 1.6;
+      baseHall.castShadow = true;
+
+      const pediment = new THREE.Mesh(
+        trackGeo(new THREE.ConeGeometry(2.4, 1.8, 4)),
+        cryptStoneMat
+      );
+      pediment.rotation.y = Math.PI / 4;
+      pediment.position.y = 4.1;
+      pediment.castShadow = true;
+
+      const portalArch = new THREE.Mesh(
+        trackGeo(new THREE.BoxGeometry(1.2, 2.0, 0.4)),
+        spectralGlowMat
+      );
+      portalArch.position.set(0, 1.0, 1.85);
+
+      crypt.add(baseHall, pediment, portalArch);
+      group.add(crypt);
+      colliders.push({ x: landX, z: landZ, radius: 2.85 });
+
+      // Ruined obelisks framing path
+      for (const [ox, oz] of [
+        [-6.4, -4.2],
+        [6.5, -4.0],
+        [-6.2, 4.8],
+        [6.4, 4.7],
+      ]) {
+        const pillar = new THREE.Mesh(
+          trackGeo(new THREE.BoxGeometry(0.75, 2.8, 0.75)),
+          cryptStoneMat
+        );
+        pillar.position.set(cx + ox, DECK_Y + 1.4, cz + oz);
+        pillar.castShadow = true;
+        group.add(pillar);
+        colliders.push({ x: cx + ox, z: cz + oz, radius: 0.65 });
+      }
+    } else if (isCoral) {
+      // Arrecife de Coral: Sea reef spire with teal crystal formations and anemone blooms
+      const reef = new THREE.Group();
+      reef.position.set(landX, DECK_Y, landZ);
+      const coralPinkMat = trackMat(
+        new THREE.MeshStandardMaterial({ color: 0xe85d75, roughness: 0.55, metalness: 0.05 })
+      );
+      const coralTealMat = trackMat(
+        new THREE.MeshStandardMaterial({
+          color: 0x38e8cb,
+          emissive: 0x22bda4,
+          emissiveIntensity: 0.45,
+          roughness: 0.35,
+          metalness: 0.15,
+        })
+      );
+      const centralSpire = new THREE.Mesh(
+        trackGeo(new THREE.ConeGeometry(1.6, 4.4, 6)),
+        coralPinkMat
+      );
+      centralSpire.position.y = 2.2;
+      centralSpire.castShadow = true;
+
+      const sideBranchL = new THREE.Mesh(
+        trackGeo(new THREE.CylinderGeometry(0.35, 0.55, 2.2, 6)),
+        coralTealMat
+      );
+      sideBranchL.rotation.z = Math.PI / 6;
+      sideBranchL.position.set(-1.2, 2.0, 0);
+
+      const sideBranchR = new THREE.Mesh(
+        trackGeo(new THREE.CylinderGeometry(0.35, 0.55, 2.4, 6)),
+        coralTealMat
+      );
+      sideBranchR.rotation.z = -Math.PI / 6;
+      sideBranchR.position.set(1.2, 2.1, 0);
+
+      const pearlOrb = new THREE.Mesh(
+        trackGeo(new THREE.SphereGeometry(0.55, 8, 8)),
+        cyanGlowMat
+      );
+      pearlOrb.position.set(0, 4.5, 0);
+
+      reef.add(centralSpire, sideBranchL, sideBranchR, pearlOrb);
+      group.add(reef);
+      colliders.push({ x: landX, z: landZ, radius: 2.8 });
+
+      // Outlier coral formations
+      for (const [ox, oz] of [
+        [-6.6, -4.1],
+        [6.8, -4.3],
+        [-6.0, 4.9],
+      ]) {
+        const cluster = new THREE.Mesh(
+          trackGeo(new THREE.OctahedronGeometry(0.85, 0)),
+          coralPinkMat
+        );
+        cluster.scale.set(0.85, 1.6, 0.85);
+        cluster.position.set(cx + ox, DECK_Y + 1.0, cz + oz);
+        cluster.castShadow = true;
+        group.add(cluster);
+        colliders.push({ x: cx + ox, z: cz + oz, radius: 0.7 });
       }
     }
 

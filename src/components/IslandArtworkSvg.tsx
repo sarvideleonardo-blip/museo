@@ -250,6 +250,92 @@ export const IslandArtworkSvg: React.FC<IslandArtworkSvgProps> = ({
           </g>
         </>
       )}
+
+      {biome === 'volcano' && (
+        <>
+          <ellipse cx="195" cy="188" rx="205" ry="38" fill="#001824" opacity=".42" filter="url(#islandShadow)" />
+          <path d="M10 88 L186 6 L388 92 L202 186Z" fill="#3a1e22" stroke="#241417" strokeWidth="5" />
+          <path d="M10 88 L202 186 L202 224 L16 128Z" fill="#5c2e28" stroke="#36171b" strokeWidth="4" />
+          <path d="M202 186 L388 92 L388 128 L202 224Z" fill="#421e20" stroke="#36171b" strokeWidth="4" />
+          <path d="M10 88 L186 6 L388 92 L202 186Z" fill="url(#volcano)" stroke="#6e2d26" strokeWidth="5" />
+          <path d="M42 92 L185 24 L348 96 L204 165Z" fill="none" stroke="#e05438" strokeWidth="6" opacity=".7" />
+          {/* Volcanic crater caldera */}
+          <path d="M130 96 L186 42 L250 96 L186 130Z" fill="#200d11" stroke="#4a1815" strokeWidth="4" />
+          <path d="M152 92 L186 58 L224 92 L186 114Z" fill="#ff4d2e" stroke="#ffa347" strokeWidth="3" filter="url(#softGlow)" />
+          <rect x="180" y="76" width="12" height="12" fill="#fff099" />
+          {/* Magma rivulets */}
+          <path d="M186 114 L186 156 L202 176" fill="none" stroke="#ff5c33" strokeWidth="3" />
+          <path d="M152 92 L112 110 L94 130" fill="none" stroke="#ff733b" strokeWidth="3" />
+          {/* Obsidian pillars */}
+          <g fill="#1a0f14" stroke="#472322" strokeWidth="3">
+            <rect x="78" y="70" width="16" height="38" />
+            <rect x="296" y="68" width="18" height="42" />
+            <rect x="264" y="44" width="14" height="32" />
+          </g>
+        </>
+      )}
+
+      {biome === 'crypt' && (
+        <>
+          <ellipse cx="195" cy="188" rx="205" ry="38" fill="#001824" opacity=".4" filter="url(#islandShadow)" />
+          <path d="M12 90 L188 12 L386 94 L204 188Z" fill="#363042" stroke="#231f2b" strokeWidth="5" />
+          <path d="M12 90 L204 188 L204 224 L18 130Z" fill="#524a61" stroke="#2d2838" strokeWidth="4" />
+          <path d="M204 188 L386 94 L386 128 L204 224Z" fill="#3c3547" stroke="#2d2838" strokeWidth="4" />
+          <path d="M12 90 L188 12 L386 94 L204 188Z" fill="url(#crypt)" stroke="#5d5270" strokeWidth="5" />
+          <path d="M44 94 L186 32 L346 98 L204 168Z" fill="none" stroke="#8e82a6" strokeWidth="7" opacity=".65" />
+          {/* Gothic stone crypt / mausoleum */}
+          <g stroke="#262230" strokeWidth="4">
+            <rect x="146" y="38" width="88" height="82" fill="#504861" />
+            <rect x="162" y="16" width="56" height="26" fill="#3d374a" />
+            <path d="M160 16 L190 -8 L220 16Z" fill="#675d7d" />
+            <rect x="178" y="68" width="24" height="52" fill="#1b1724" />
+          </g>
+          {/* Eerie spirit lantern */}
+          <rect x="186" y="78" width="8" height="12" fill="#9df5e8" filter="url(#softGlow)" />
+          {/* Mossy stone pillars and tombs */}
+          <g fill="#433d52" stroke="#282433" strokeWidth="3">
+            <rect x="74" y="66" width="18" height="52" />
+            <rect x="104" y="80" width="26" height="24" />
+            <rect x="268" y="70" width="18" height="48" />
+            <rect x="298" y="82" width="28" height="22" />
+          </g>
+          {/* Ivy / moss accents */}
+          <g fill="#5d856c">
+            <rect x="76" y="76" width="6" height="8" />
+            <rect x="148" y="52" width="8" height="6" />
+            <rect x="272" y="82" width="7" height="6" />
+          </g>
+        </>
+      )}
+
+      {biome === 'coral' && (
+        <>
+          <ellipse cx="195" cy="188" rx="205" ry="38" fill="#001824" opacity=".35" filter="url(#islandShadow)" />
+          <path d="M12 90 L188 12 L386 94 L204 188Z" fill="#205c58" stroke="#143b38" strokeWidth="5" />
+          <path d="M12 90 L204 188 L204 224 L18 130Z" fill="#368781" stroke="#1d4d49" strokeWidth="4" />
+          <path d="M204 188 L386 94 L386 128 L204 224Z" fill="#256b66" stroke="#1d4d49" strokeWidth="4" />
+          <path d="M12 90 L188 12 L386 94 L204 188Z" fill="url(#coral)" stroke="#45b8ad" strokeWidth="5" />
+          <path d="M44 94 L186 32 L346 98 L204 168Z" fill="none" stroke="#bbf5eb" strokeWidth="8" opacity=".7" />
+          {/* Turquoise tidal pool */}
+          <ellipse cx="190" cy="106" rx="36" ry="20" fill="#32c7be" stroke="#e0fcf7" strokeWidth="3" />
+          <ellipse cx="190" cy="106" rx="22" ry="11" fill="#75faed" />
+          {/* Coral towers and sea anemone structures */}
+          <g stroke="#802a42" strokeWidth="3">
+            <rect x="110" y="52" width="22" height="46" fill="#e85d75" />
+            <rect x="104" y="44" width="14" height="18" fill="#f0788d" />
+            <rect x="122" y="38" width="16" height="22" fill="#f58e9f" />
+            <rect x="254" y="58" width="24" height="42" fill="#eb6b56" />
+            <rect x="246" y="48" width="16" height="18" fill="#f28877" />
+            <rect x="268" y="42" width="14" height="22" fill="#faa193" />
+          </g>
+          {/* Pearl & sea glass highlights */}
+          <g fill="#ffffff" filter="url(#softGlow)">
+            <circle cx="118" cy="46" r="3" />
+            <circle cx="262" cy="52" r="3.5" />
+            <circle cx="190" cy="106" r="2.5" />
+          </g>
+        </>
+      )}
     </g>
   );
 };

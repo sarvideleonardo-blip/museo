@@ -281,6 +281,18 @@ export const ArchipelagoMap: React.FC<ArchipelagoMapProps> = ({
               <stop stopColor="#e29b70" />
               <stop offset="1" stopColor="#713e47" />
             </linearGradient>
+            <linearGradient id="volcano" x1="0" y1="0" x2="1" y2="1">
+              <stop stopColor="#4a2522" />
+              <stop offset="1" stopColor="#1e1014" />
+            </linearGradient>
+            <linearGradient id="crypt" x1="0" y1="0" x2="1" y2="1">
+              <stop stopColor="#443b4f" />
+              <stop offset="1" stopColor="#252033" />
+            </linearGradient>
+            <linearGradient id="coral" x1="0" y1="0" x2="1" y2="1">
+              <stop stopColor="#6ee2cb" />
+              <stop offset="1" stopColor="#248f88" />
+            </linearGradient>
             <pattern id="pixelDots" width="18" height="18" patternUnits="userSpaceOnUse">
               <rect x="2" y="3" width="3" height="3" fill="#d9f5d0" opacity=".32" />
               <rect x="11" y="12" width="2" height="2" fill="#e8f5c2" opacity=".28" />

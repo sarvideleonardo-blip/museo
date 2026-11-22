@@ -7,6 +7,9 @@ export const BIOME_LABELS: Record<IslandBiome, { name: string; desc: string }> =
   patio: { name: 'Patio jardín', desc: 'Fuente de piedra, árbol raíz y plazas empedradas' },
   desert: { name: 'Desierto antiguo', desc: 'Pirámide de arena, cactus y ruinas contemplativas' },
   workshop: { name: 'Taller industrial', desc: 'Arquitectura metálica, chimeneas y luces de neón' },
+  volcano: { name: 'Caldera volcánica', desc: 'Rocas de basalto oscuro, cráter humeante y ríos de magma' },
+  crypt: { name: 'Cripta y ruinas', desc: 'Piedra antigua, arcos góticos, columnas y musgo' },
+  coral: { name: 'Arrecife de coral', desc: 'Atolón turquesa, arenas claras y estructuras coralinas' },
 };
 
 export const ORIGINAL_ISLANDS: Island[] = [

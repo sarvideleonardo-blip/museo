@@ -17,6 +17,9 @@ const BIOME_COLORS: Record<Island['biome'], string> = {
   ice: '#8ef5ff',
   desert: '#e6a855',
   workshop: '#f07c59',
+  volcano: '#ff6b4a',
+  crypt: '#9d8ec2',
+  coral: '#38e8cb',
 };
 
 export const MiniCompassRadar: React.FC<MiniCompassRadarProps> = ({ islands, radarRef }) => {

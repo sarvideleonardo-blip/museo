@@ -111,6 +111,45 @@ function getBiomeTileStyles(island: Island): {
           S: 'shelf',
         },
       };
+    case 'coral':
+      return {
+        wallChar: 'W',
+        floorChar: '.',
+        isOutdoor: true,
+        tileMap: {
+          W: 'bush',
+          '.': 'sand',
+          C: 'path',
+          D: 'door',
+          X: 'exit_portal',
+        },
+      };
+    case 'volcano':
+      return {
+        wallChar: 'W',
+        floorChar: '.',
+        isOutdoor: true,
+        tileMap: {
+          W: 'wall',
+          '.': 'dungeon_floor',
+          C: 'path',
+          D: 'door',
+          X: 'exit_portal',
+        },
+      };
+    case 'crypt':
+      return {
+        wallChar: 'W',
+        floorChar: '.',
+        isOutdoor: false,
+        tileMap: {
+          W: 'wall',
+          '.': 'dungeon_floor',
+          C: 'path',
+          D: 'door',
+          X: 'exit_portal',
+        },
+      };
     case 'observatory':
     case 'workshop':
     default:
