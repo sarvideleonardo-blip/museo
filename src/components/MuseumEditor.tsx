@@ -145,7 +145,8 @@ export const MuseumEditor: React.FC<MuseumEditorProps> = ({
   const esInvitado = Boolean(source.kind === 'cloud' && source.guestAccess);
   const guestAccess = source.kind === 'cloud' ? source.guestAccess : undefined;
   const isFlagshipAdmin = source.kind === 'local' && Boolean(source.isFlagshipAdmin);
-  const canManageDonations = (isCloud && !esInvitado) || isFlagshipAdmin;
+  // Donaciones solo para el proyecto principal (Museo 404)
+  const canManageDonations = isFlagshipAdmin;
   const canManageInquiries = (isCloud && !esInvitado && Boolean(source.authUser?.uid)) || isFlagshipAdmin;
 
   const allIslands: Island[] = isCloud
