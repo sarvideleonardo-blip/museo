@@ -124,7 +124,8 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
         <div className="museum-scroll flex-1 overflow-y-auto px-6 py-5">
           {tab === 'donate' && (
             <div className="space-y-5">
-              {/* Tarjeta principal del museo actual */}
+              {/* Tarjeta principal: solo para el proyecto principal (Museo 404) */}
+              {isFlagship && (
               <section className="border-2 border-[#163d4a] bg-[#faf8eb] p-5 shadow-[6px_6px_0_rgba(22,61,74,0.1)]">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
@@ -186,6 +187,7 @@ export const SupportProjectModal: React.FC<SupportProjectModalProps> = ({
                   </div>
                 )}
               </section>
+              )}
 
               {/* Respaldar infraestructura abierta cuando se visita otro museo */}
               {hasFlagshipBackup && flagshipDonation && (
