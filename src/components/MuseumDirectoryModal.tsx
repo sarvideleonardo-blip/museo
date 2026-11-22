@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { User } from 'firebase/auth';
-import { BookOpen, Compass, KeyRound, Link2, Lock, LogIn, Pencil, Plus, RefreshCw, Search, Shuffle, Sparkles, X } from 'lucide-react';
+import { BookOpen, Compass, KeyRound, Link2, Lock, LogIn, Pencil, Plus, RefreshCw, Search, Share2, Shuffle, Sparkles, X } from 'lucide-react';
 import { CATEGORY_META } from '../data/themes';
-import { CloudMuseum, MuseumCategory } from '../types/museum';
+import { CloudMuseum, IslandInvite, MuseumCategory } from '../types/museum';
 
 interface MuseumDirectoryModalProps {
   isOpen: boolean;
   authUser: User | null;
   publicMuseums: CloudMuseum[];
   myMuseums: CloudMuseum[];
+  acceptedLoans?: IslandInvite[];
   activeMuseumId: string;
   loading: boolean;
   error: string | null;
@@ -30,6 +31,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
   authUser,
   publicMuseums,
   myMuseums,
+  acceptedLoans = [],
   activeMuseumId,
   loading,
   error,
@@ -47,7 +49,19 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
 }) => {
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | MuseumCategory>('all');
+  const [loanedOnly, setLoanedOnly] = useState<boolean>(false);
   const [jumpInput, setJumpInput] = useState('');
+
+  // Authoritative set of museum IDs with active accepted loans
+  const loanedMuseumIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const loan of acceptedLoans) {
+      if (loan.status === 'accepted' && loan.museumId) {
+        ids.add(loan.museumId);
+      }
+    }
+    return ids;
+  }, [acceptedLoans]);
 
   const networkTotals = useMemo(() => {
     const totalIslands = publicMuseums.reduce((acc, m) => acc + (m.islandCount || 0), 0);
@@ -98,6 +112,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
     const q = searchText.trim().toLowerCase();
     return publicMuseums.filter((m) => {
       if (selectedCategory !== 'all' && m.category !== selectedCategory) return false;
+      if (loanedOnly && !loanedMuseumIds.has(m.id)) return false;
       if (!q) return true;
       return (
         m.title.toLowerCase().includes(q) ||
@@ -105,7 +120,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
         m.subtitle.toLowerCase().includes(q)
       );
     });
-  }, [publicMuseums, searchText, selectedCategory]);
+  }, [publicMuseums, searchText, selectedCategory, loanedOnly, loanedMuseumIds]);
 
   if (!isOpen) return null;
 
@@ -337,9 +352,20 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
                     >
                       <div>
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-pixel border border-[#f4d47d]/50 bg-[#072634] px-2 py-0.5 text-[8px] text-[#f4d47d]">
-                            {cat.badge}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-pixel border border-[#f4d47d]/50 bg-[#072634] px-2 py-0.5 text-[8px] text-[#f4d47d]">
+                              {cat.badge}
+                            </span>
+                            {loanedMuseumIds.has(museum.id) && (
+                              <span
+                                className="font-pixel inline-flex items-center gap-1 border border-[#7fd6cc]/60 bg-[#0a3844] px-1.5 py-0.5 text-[7px] text-[#7fd6cc]"
+                                title="Este museo cuenta con salas o islas en préstamo activo"
+                              >
+                                <Share2 className="h-2.5 w-2.5 text-[#7fd6cc]" />
+                                ISLA PRESTADA
+                              </span>
+                            )}
+                          </div>
                           <span className="inline-flex items-center gap-1 text-xs text-[#a9c7bc]">
                             {!museum.isPublic && <Lock className="h-3 w-3 text-[#f4d47d]" />}
                             {museum.isPublic ? 'Público' : 'Privado'}
@@ -418,7 +444,7 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
               </div>
             </div>
 
-            <div className="mb-4 flex flex-wrap gap-1.5">
+            <div className="mb-4 flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
@@ -446,6 +472,25 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
                   </button>
                 )
               )}
+              <div className="mx-1 h-5 w-px bg-white/20" />
+              <button
+                type="button"
+                onClick={() => setLoanedOnly((prev) => !prev)}
+                aria-pressed={loanedOnly}
+                className={`inline-flex items-center gap-1.5 border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  loanedOnly
+                    ? 'border-[#7fd6cc] bg-[#114b59] text-[#e6fbf8] shadow-[0_0_8px_rgba(127,214,204,0.3)]'
+                    : 'border-[#7fd6cc]/40 bg-white/5 text-[#a7d6ca] hover:bg-white/10'
+                }`}
+              >
+                <Share2 className="h-3 w-3 text-[#7fd6cc]" />
+                <span>Con Islas Prestadas</span>
+                {loanedMuseumIds.size > 0 && (
+                  <span className="font-pixel ml-0.5 rounded bg-[#072634] px-1 py-0.2 text-[8px] text-[#7fd6cc]">
+                    {loanedMuseumIds.size}
+                  </span>
+                )}
+              </button>
             </div>
 
             {error && (
@@ -478,9 +523,20 @@ export const MuseumDirectoryModal: React.FC<MuseumDirectoryModalProps> = ({
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-pixel border border-[#f4d47d]/50 bg-[#0b2b39] px-2 py-0.5 text-[8px] text-[#f4d47d]">
-                            {cat.badge}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-pixel border border-[#f4d47d]/50 bg-[#0b2b39] px-2 py-0.5 text-[8px] text-[#f4d47d]">
+                              {cat.badge}
+                            </span>
+                            {loanedMuseumIds.has(museum.id) && (
+                              <span
+                                className="font-pixel inline-flex items-center gap-1 border border-[#7fd6cc]/60 bg-[#0a3844] px-1.5 py-0.5 text-[7px] text-[#7fd6cc]"
+                                title="Este museo cuenta con salas o islas en préstamo activo"
+                              >
+                                <Share2 className="h-2.5 w-2.5 text-[#7fd6cc]" />
+                                ISLA PRESTADA
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-1">
                             <span
                               className="h-3 w-3 border border-black/40"

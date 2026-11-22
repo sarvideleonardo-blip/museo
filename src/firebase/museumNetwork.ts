@@ -37,7 +37,7 @@ import {
   SaleStatus,
 } from '../types/museum';
 import { OperationType, auth, db, googleProvider, handleFirestoreError } from './client';
-import { sanitizeDonationConfig } from './interactions';
+import { fetchAllAcceptedLoans, sanitizeDonationConfig } from './interactions';
 
 function clampStr(val: unknown, max: number, fallback = ''): string {
   const s = typeof val === 'string' ? val : fallback;
@@ -225,6 +225,11 @@ export async function fetchPublicMuseums(): Promise<CloudMuseum[]> {
     handleFirestoreError(error, OperationType.LIST, path);
   }
 }
+
+/**
+ * Re-export fetchAllAcceptedLoans from interactions for directory consumers
+ */
+export { fetchAllAcceptedLoans };
 
 export async function fetchMyMuseums(uid: string): Promise<CloudMuseum[]> {
   const path = 'museums';

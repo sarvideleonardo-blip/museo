@@ -637,6 +637,26 @@ export async function fetchAcceptedLoansForMuseum(museumId: string): Promise<Isl
   }
 }
 
+/**
+ * Fetches all accepted loans across the network.
+ * Used by MuseumDirectoryModal to accurately identify museums with active loaned islands
+ * in a single bounded query rather than per-museum N+1 queries.
+ */
+export async function fetchAllAcceptedLoans(maxLimit = 150): Promise<IslandInvite[]> {
+  const path = 'islandInvites';
+  try {
+    const q = query(
+      collection(db, 'islandInvites'),
+      where('status', '==', 'accepted'),
+      limit(maxLimit)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => mapIslandInviteDoc(d.id, d.data()));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
 export async function fetchHostInvitesForMuseum(
   museumId: string,
   hostUid: string

@@ -35,6 +35,7 @@ import { FOUNTAIN_QUOTES } from './data/initialContent';
 import { CATEGORY_META, DEFAULT_MUSEUM_THEME } from './data/themes';
 import { auth } from './firebase/client';
 import {
+  fetchAllAcceptedLoans,
   fetchAcceptedLoansForMuseum,
   fetchFlagshipCloudConfig,
   inviteToLoanedMeta,
@@ -139,6 +140,7 @@ export default function App() {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [publicMuseums, setPublicMuseums] = useState<CloudMuseum[]>([]);
   const [myMuseums, setMyMuseums] = useState<CloudMuseum[]>([]);
+  const [acceptedLoans, setAcceptedLoans] = useState<IslandInvite[]>([]);
   const [directoryLoading, setDirectoryLoading] = useState(false);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
 
@@ -232,8 +234,12 @@ export default function App() {
     setDirectoryLoading(true);
     setDirectoryError(null);
     try {
-      const pub = await fetchPublicMuseums();
+      const [pub, loans] = await Promise.all([
+        fetchPublicMuseums(),
+        fetchAllAcceptedLoans().catch(() => [] as IslandInvite[]),
+      ]);
       setPublicMuseums(pub);
+      setAcceptedLoans(loans);
       const currentUser = userOverride !== undefined ? userOverride : auth.currentUser;
       if (currentUser) {
         const mine = await fetchMyMuseums(currentUser.uid);
@@ -1052,6 +1058,7 @@ export default function App() {
         authUser={authUser}
         publicMuseums={publicMuseums}
         myMuseums={myMuseums}
+        acceptedLoans={acceptedLoans}
         activeMuseumId={activeMuseum.kind === 'cloud' ? activeMuseum.museum.id : 'flagship'}
         loading={directoryLoading}
         error={directoryError}
